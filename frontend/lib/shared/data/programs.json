@@ -1,0 +1,382 @@
+[
+  {
+    "id": "pw-cs",
+    "university": "Warsaw University of Technology",
+    "programName": "Computer Science, B.Sc. (на английском)",
+    "country": "Польша",
+    "countryCode": "PL",
+    "city": "Варшава",
+    "field": "IT и Computer Science",
+    "tags": ["it", "data"],
+    "degree": "Бакалавриат",
+    "durationYears": 3.5,
+    "language": "Английский",
+    "ieltsMin": 6.0,
+    "tuitionPerYearUsd": 4000,
+    "livingPerYearUsd": 7200,
+    "scholarship": "partial",
+    "scholarshipNote": "Rector's scholarship для лучших студентов, покрывает 30–50% обучения",
+    "deadlines": [
+      { "intake": "Осень 2027", "date": "2027-07-10", "label": "Подача до 10 июля 2027" }
+    ],
+    "summary": "Инженерный флагман Польши. Сильная программа по CS, доступная стоимость, диплом признаётся в ЕС.",
+    "highlights": ["Диплом ЕС", "Сильная IT-школа", "Кампус в центре Варшавы", "Практика в IT-компаниях"],
+    "sources": [
+      { "label": "Официальный сайт вуза", "url": "https://www.pw.edu.pl/engpw" }
+    ],
+    "demo": true
+  },
+  {
+    "id": "uw-cs",
+    "university": "University of Warsaw",
+    "programName": "Computer Science, B.Sc. (на английском)",
+    "country": "Польша",
+    "countryCode": "PL",
+    "city": "Варшава",
+    "field": "IT и Computer Science",
+    "tags": ["it", "data"],
+    "degree": "Бакалавриат",
+    "durationYears": 3,
+    "language": "Английский",
+    "ieltsMin": 6.0,
+    "tuitionPerYearUsd": 4200,
+    "livingPerYearUsd": 7200,
+    "scholarship": "partial",
+    "scholarshipNote": "Стипендии за академические успехи для студентов старших курсов",
+    "deadlines": [
+      { "intake": "Осень 2027", "date": "2027-07-05", "label": "Подача до 5 июля 2027" }
+    ],
+    "summary": "Крупнейший университет Польши с одной из сильнейших школ математики и информатики в регионе.",
+    "highlights": ["Топ-вуз Польши", "Исследовательские проекты", "Дешёвая жизнь в Варшаве"],
+    "sources": [
+      { "label": "Официальный сайт вуза", "url": "https://en.uw.edu.pl/" }
+    ],
+    "demo": true
+  },
+  {
+    "id": "swps-design",
+    "university": "SWPS University",
+    "programName": "Graphic Design, BA (на английском)",
+    "country": "Польша",
+    "countryCode": "PL",
+    "city": "Варшава",
+    "field": "Дизайн и визуальные коммуникации",
+    "tags": ["design"],
+    "degree": "Бакалавриат",
+    "durationYears": 3,
+    "language": "Английский",
+    "ieltsMin": 5.5,
+    "tuitionPerYearUsd": 3600,
+    "livingPerYearUsd": 7200,
+    "scholarship": "partial",
+    "scholarshipNote": "Скидки за портфолио и академические успехи",
+    "deadlines": [
+      { "intake": "Осень 2027", "date": "2027-08-20", "label": "Подача до 20 августа 2027" }
+    ],
+    "summary": "Практико-ориентированный дизайн: студийные проекты, портфолио, стажировки в агентствах.",
+    "highlights": ["Портфолио вместо экзаменов", "Студийный формат", "Партнёрства с агентствами"],
+    "sources": [
+      { "label": "Официальный сайт вуза", "url": "https://swps.pl/en" }
+    ],
+    "demo": true
+  },
+  {
+    "id": "swps-psych",
+    "university": "SWPS University",
+    "programName": "Psychology, BA (на английском)",
+    "country": "Польша",
+    "countryCode": "PL",
+    "city": "Варшава",
+    "field": "Психология",
+    "tags": ["psychology"],
+    "degree": "Бакалавриат",
+    "durationYears": 3,
+    "language": "Английский",
+    "ieltsMin": 6.0,
+    "tuitionPerYearUsd": 3600,
+    "livingPerYearUsd": 7200,
+    "scholarship": "partial",
+    "scholarshipNote": "Стипендии за успеваемость",
+    "deadlines": [
+      { "intake": "Осень 2027", "date": "2027-08-20", "label": "Подача до 20 августа 2027" }
+    ],
+    "summary": "Одна из сильнейших психологических школ Польши с англоязычным бакалавриатом.",
+    "highlights": ["Клиническая база", "Маленькие группы", "Англоязычная программа"],
+    "sources": [
+      { "label": "Официальный сайт вуза", "url": "https://swps.pl/en" }
+    ],
+    "demo": true
+  },
+  {
+    "id": "cuni-cs",
+    "university": "Charles University",
+    "programName": "Computer Science, B.Sc. (на английском)",
+    "country": "Чехия",
+    "countryCode": "CZ",
+    "city": "Прага",
+    "field": "IT и Computer Science",
+    "tags": ["it", "data"],
+    "degree": "Бакалавриат",
+    "durationYears": 3,
+    "language": "Английский",
+    "ieltsMin": 6.0,
+    "tuitionPerYearUsd": 5200,
+    "livingPerYearUsd": 7800,
+    "scholarship": "partial",
+    "scholarshipNote": "Стипендии за академические результаты и научные проекты",
+    "deadlines": [
+      { "intake": "Осень 2027", "date": "2027-04-30", "label": "Подача до 30 апреля 2027" }
+    ],
+    "summary": "Старейший университет Центральной Европы (1348) с современной CS-программой.",
+    "highlights": ["Исторический кампус", "Сильная математика", "Прага — дешёвая жизнь"],
+    "sources": [
+      { "label": "Официальный сайт вуза", "url": "https://www.cuni.cz/" }
+    ],
+    "demo": true
+  },
+  {
+    "id": "ctu-cs",
+    "university": "Czech Technical University",
+    "programName": "Informatics, B.Sc. (на английском)",
+    "country": "Чехия",
+    "countryCode": "CZ",
+    "city": "Прага",
+    "field": "IT и Computer Science",
+    "tags": ["it"],
+    "degree": "Бакалавриат",
+    "durationYears": 3,
+    "language": "Английский",
+    "ieltsMin": 6.0,
+    "tuitionPerYearUsd": 5000,
+    "livingPerYearUsd": 7800,
+    "scholarship": "none",
+    "scholarshipNote": "Платные программы, отдельных стипендий нет",
+    "deadlines": [
+      { "intake": "Осень 2027", "date": "2027-03-31", "label": "Подача до 31 марта 2027" }
+    ],
+    "summary": "Технический вуз с сильной инженерной базой и связями с IT-индустрией Праги.",
+    "highlights": ["Инженерная школа", "Стажировки в Праге", "Англоязычный бакалавриат"],
+    "sources": [
+      { "label": "Официальный сайт вуза", "url": "https://www.cvut.cz/en" }
+    ],
+    "demo": true
+  },
+  {
+    "id": "rwth-cs",
+    "university": "RWTH Aachen University",
+    "programName": "Informatik, B.Sc. (на немецком)",
+    "country": "Германия",
+    "countryCode": "DE",
+    "city": "Аахен",
+    "field": "IT и Computer Science",
+    "tags": ["it", "engineering"],
+    "degree": "Бакалавриат",
+    "durationYears": 3,
+    "language": "Немецкий",
+    "ieltsMin": null,
+    "tuitionPerYearUsd": 0,
+    "livingPerYearUsd": 13200,
+    "scholarship": "none",
+    "scholarshipNote": "Обучение бесплатное (семестровый сбор ~600 €/год), живут на свои средства или DAAD",
+    "deadlines": [
+      { "intake": "Осень 2027", "date": "2027-07-15", "label": "Подача до 15 июля 2027" }
+    ],
+    "summary": "Топ-инженерный вуз Германии. Обучение бесплатное, но программа на немецком (нужен уровень B2/C1).",
+    "highlights": ["Бесплатное обучение", "Мировой уровень инженерии", "Нужен немецкий B2+"],
+    "sources": [
+      { "label": "Официальный сайт вуза", "url": "https://www.rwth-aachen.de/go/id/a/?lidx=1" }
+    ],
+    "demo": true
+  },
+  {
+    "id": "polimi-ce",
+    "university": "Politecnico di Milano",
+    "programName": "Computer Engineering, B.Sc. (на английском)",
+    "country": "Италия",
+    "countryCode": "IT",
+    "city": "Милан",
+    "field": "IT и Computer Science",
+    "tags": ["it", "engineering"],
+    "degree": "Бакалавриат",
+    "durationYears": 3,
+    "language": "Английский",
+    "ieltsMin": 6.0,
+    "tuitionPerYearUsd": 3800,
+    "livingPerYearUsd": 9600,
+    "scholarship": "partial",
+    "scholarshipNote": "Стоимость зависит от дохода семьи (ISEE); merit-стипендии до €5 000/год",
+    "deadlines": [
+      { "intake": "Осень 2027", "date": "2027-03-10", "label": "Подача до 10 марта 2027" }
+    ],
+    "summary": "Ведущий технический вуз Италии, сильнейшая инженерная школа и доступная стоимость по ISEE.",
+    "highlights": ["Топ-инженерия", "Гибкая стоимость (ISEE)", "Милан — центр индустрии"],
+    "sources": [
+      { "label": "Официальный сайт вуза", "url": "https://www.polimi.it/en" }
+    ],
+    "demo": true
+  },
+  {
+    "id": "unibo-econ",
+    "university": "University of Bologna",
+    "programName": "Business and Economics, B.Sc. (на английском)",
+    "country": "Италия",
+    "countryCode": "IT",
+    "city": "Болонья",
+    "field": "Бизнес и экономика",
+    "tags": ["business", "finance"],
+    "degree": "Бакалавриат",
+    "durationYears": 3,
+    "language": "Английский",
+    "ieltsMin": 6.0,
+    "tuitionPerYearUsd": 3000,
+    "livingPerYearUsd": 8400,
+    "scholarship": "partial",
+    "scholarshipNote": "Региональные стипендии и освобождение от оплаты по ISEE",
+    "deadlines": [
+      { "intake": "Осень 2027", "date": "2027-03-15", "label": "Подача до 15 марта 2027" }
+    ],
+    "summary": "Старейший университет мира (1088) с сильной экономической школой и низкой стоимостью.",
+    "highlights": ["Старейший вуз Европы", "Низкая стоимость", "Сильная экономика"],
+    "sources": [
+      { "label": "Официальный сайт вуза", "url": "https://www.unibo.it/en" }
+    ],
+    "demo": true
+  },
+  {
+    "id": "upc-ds",
+    "university": "Universitat Politècnica de Catalunya",
+    "programName": "Data Science and Engineering, B.Sc. (на английском)",
+    "country": "Испания",
+    "countryCode": "ES",
+    "city": "Барселона",
+    "field": "Data Science и аналитика",
+    "tags": ["data", "it"],
+    "degree": "Бакалавриат",
+    "durationYears": 4,
+    "language": "Английский",
+    "ieltsMin": 6.0,
+    "tuitionPerYearUsd": 3300,
+    "livingPerYearUsd": 9000,
+    "scholarship": "partial",
+    "scholarshipNote": "Стипендии университета и фондов для иностранных студентов",
+    "deadlines": [
+      { "intake": "Осень 2027", "date": "2027-06-30", "label": "Подача до 30 июня 2027" }
+    ],
+    "summary": "Технический университет Барселоны с современной программой по data science.",
+    "highlights": ["Data science с 1 курса", "Барселона", "Связи с технопарками"],
+    "sources": [
+      { "label": "Официальный сайт вуза", "url": "https://www.upc.edu/en" }
+    ],
+    "demo": true
+  },
+  {
+    "id": "utwente-cs",
+    "university": "University of Twente",
+    "programName": "Computer Science, B.Sc. (на английском)",
+    "country": "Нидерланды",
+    "countryCode": "NL",
+    "city": "Энсхеде",
+    "field": "IT и Computer Science",
+    "tags": ["it"],
+    "degree": "Бакалавриат",
+    "durationYears": 3,
+    "language": "Английский",
+    "ieltsMin": 6.0,
+    "tuitionPerYearUsd": 16200,
+    "livingPerYearUsd": 11000,
+    "scholarship": "partial",
+    "scholarshipNote": "Twente Scholarship: €3 000–€5 000/год для иностранных студентов",
+    "deadlines": [
+      { "intake": "Осень 2027", "date": "2027-05-01", "label": "Подача до 1 мая 2027" }
+    ],
+    "summary": "Технический университет с кампусом-городком и проектным обучением, но высокая стоимость для не-ЕС.",
+    "highlights": ["Проектное обучение", "Кампусный университет", "Высокая стоимость для не-ЕС"],
+    "sources": [
+      { "label": "Официальный сайт вуза", "url": "https://www.utwente.nl/en/" }
+    ],
+    "demo": true
+  },
+  {
+    "id": "aalto-sci",
+    "university": "Aalto University",
+    "programName": "Science and Technology, B.Sc. (на английском)",
+    "country": "Финляндия",
+    "countryCode": "FI",
+    "city": "Эспоо",
+    "field": "IT и Computer Science",
+    "tags": ["it", "engineering", "data"],
+    "degree": "Бакалавриат",
+    "durationYears": 3,
+    "language": "Английский",
+    "ieltsMin": 6.5,
+    "tuitionPerYearUsd": 16000,
+    "livingPerYearUsd": 9600,
+    "scholarship": "full",
+    "scholarshipNote": "Merit-стипендия Aalto покрывает 50–100% стоимости обучения для не-ЕС студентов",
+    "deadlines": [
+      { "intake": "Осень 2027", "date": "2027-01-17", "label": "Подача до 17 января 2027" }
+    ],
+    "summary": "Дизайн+технологии+бизнес в одном кампусе. Высокая стоимость, но крупные merit-стипендии.",
+    "highlights": ["Стипендии 50–100%", "Сильный предпринимательский кампус", "Ранний дедлайн"],
+    "sources": [
+      { "label": "Официальный сайт вуза", "url": "https://www.aalto.fi/en" }
+    ],
+    "demo": true
+  },
+  {
+    "id": "bme-cs",
+    "university": "Budapest University of Technology and Economics",
+    "programName": "Computer Engineering, B.Sc. (на английском)",
+    "country": "Венгрия",
+    "countryCode": "HU",
+    "city": "Будапешт",
+    "field": "IT и Computer Science",
+    "tags": ["it", "engineering"],
+    "degree": "Бакалавриат",
+    "durationYears": 4,
+    "language": "Английский",
+    "ieltsMin": 5.5,
+    "tuitionPerYearUsd": 6600,
+    "livingPerYearUsd": 6600,
+    "scholarship": "full",
+    "scholarshipNote": "Stipendium Hungaricum: полное покрытие обучения, проживания и медстраховки",
+    "deadlines": [
+      { "intake": "Осень 2027", "date": "2027-01-15", "label": "Стипендия Stipendium Hungaricum до 15 января 2027" },
+      { "intake": "Осень 2027", "date": "2027-06-30", "label": "Обычная подача до 30 июня 2027" }
+    ],
+    "summary": "Сильный инженерный вуз с полными государственными стипендиями для иностранцев.",
+    "highlights": ["Полная стипендия", "Низкая стоимость жизни", "Англоязычная инженерия"],
+    "sources": [
+      { "label": "Официальный сайт вуза", "url": "https://www.bme.hu/?language=en" },
+      { "label": "Stipendium Hungaricum", "url": "https://stipendiumhungaricum.hu/" }
+    ],
+    "demo": true
+  },
+  {
+    "id": "rug-psych",
+    "university": "University of Groningen",
+    "programName": "Psychology, B.Sc. (на английском)",
+    "country": "Нидерланды",
+    "countryCode": "NL",
+    "city": "Гронинген",
+    "field": "Психология",
+    "tags": ["psychology"],
+    "degree": "Бакалавриат",
+    "durationYears": 3,
+    "language": "Английский",
+    "ieltsMin": 6.5,
+    "tuitionPerYearUsd": 11800,
+    "livingPerYearUsd": 11000,
+    "scholarship": "partial",
+    "scholarshipNote": "Holland Scholarship €5 000 для первокурсников из не-ЕС",
+    "deadlines": [
+      { "intake": "Осень 2027", "date": "2027-05-01", "label": "Подача до 1 мая 2027" }
+    ],
+    "summary": "Один из сильнейших психологических факультетов Европы, но высокая стоимость жизни.",
+    "highlights": ["Топ-психология в ЕС", "Англоязычная программа", "Высокая стоимость"],
+    "sources": [
+      { "label": "Официальный сайт вуза", "url": "https://www.rug.nl/" }
+    ],
+    "demo": true
+  }
+]

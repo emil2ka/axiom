@@ -1,0 +1,171 @@
+export type MemoryField =
+  | "name"
+  | "grade"
+  | "country"
+  | "budget"
+  | "ielts"
+  | "gpa"
+  | "interests"
+  | "intake"
+  | "priority"
+  | "language"
+  | "constraints";
+
+export type MemorySource = "voice" | "text" | "manual" | "demo";
+
+export interface MemoryFact {
+  id: string;
+  field: MemoryField;
+  label: string;
+  value: string;
+  display: string;
+  quote: string;
+  confidence: number;
+  numeric?: number;
+  source: MemorySource;
+  createdAt: number;
+}
+
+export interface Profile {
+  name?: string;
+  grade?: string;
+  memories: MemoryFact[];
+}
+
+export interface ProgramDeadline {
+  intake: string;
+  date: string;
+  label: string;
+}
+
+export type ScholarshipLevel = "none" | "partial" | "full";
+
+export interface Program {
+  id: string;
+  university: string;
+  programName: string;
+  country: string;
+  countryCode: string;
+  city: string;
+  field: string;
+  tags: string[];
+  degree: string;
+  durationYears: number;
+  language: string;
+  ieltsMin: number | null;
+  tuitionPerYearUsd: number;
+  livingPerYearUsd: number;
+  scholarship: ScholarshipLevel;
+  scholarshipNote: string;
+  deadlines: ProgramDeadline[];
+  summary: string;
+  highlights: string[];
+  sources: { label: string; url: string }[];
+  demo: boolean;
+}
+
+export interface ScoreWeights {
+  budget: number;
+  country: number;
+  ielts: number;
+  field: number;
+  scholarship: number;
+  timing: number;
+}
+
+export interface Reason {
+  text: string;
+  weight: number;
+  field: MemoryField | "program";
+}
+
+export interface Gap {
+  text: string;
+  severity: "high" | "medium" | "low";
+}
+
+export interface Recommendation {
+  program: Program;
+  rank: number;
+  score: number;
+  fitLabel: "Отличное соответствие" | "Хорошее соответствие" | "Умеренное соответствие" | "Слабое соответствие";
+  breakdown: Record<keyof ScoreWeights, number>;
+  reasons: Reason[];
+  gaps: Gap[];
+  totalPerYearUsd: number;
+  budgetDeltaUsd: number | null;
+}
+
+export interface RecommendResult {
+  recommendations: Recommendation[];
+  engine: "rules" | "llm";
+}
+
+export interface WhatIfParams {
+  budget?: number | null;
+  ielts?: number | null;
+  countries?: string[] | null;
+  countryWeight: number;
+  budgetWeight: number;
+  scholarshipWeight: number;
+}
+
+export interface RankDiff {
+  programId: string;
+  name: string;
+  baseRank: number;
+  newRank: number;
+  delta: number;
+}
+
+export interface WhatIfResult extends RecommendResult {
+  diff: {
+    moved: RankDiff[];
+    entered: RankDiff[];
+    dropped: RankDiff[];
+  };
+  summary: string;
+}
+
+export type RoadmapCategory = "exam" | "documents" | "deadline" | "activity";
+
+export interface RoadmapStep {
+  id: string;
+  category: RoadmapCategory;
+  title: string;
+  description: string;
+  dueMonth: string;
+  why: string;
+  sourceNote: string;
+}
+
+export interface Roadmap {
+  targetProgram: Program | null;
+  steps: RoadmapStep[];
+}
+
+export interface Diagnosis {
+  summary: string;
+  strengths: string[];
+  constraints: string[];
+  goal: string;
+  completeness: number;
+  knownFacts: number;
+  totalCoreFacts: number;
+}
+
+export interface ChatMessage {
+  id: string;
+  role: "axiom" | "user";
+  text: string;
+  highlights?: { quote: string; field: MemoryField }[];
+  ts: number;
+}
+
+export interface InterviewQuestion {
+  id: string;
+  text: string;
+  placeholder: string;
+  quickReplies: string[];
+  core: boolean;
+}

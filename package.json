@@ -1,0 +1,8 @@
+{
+  "name": "axiom",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "sync": "node scripts/sync-shared.mjs"
+  }
+}
