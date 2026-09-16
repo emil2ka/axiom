@@ -178,11 +178,13 @@ export default function LandingPage() {
                 <div className="mt-4 flex items-center justify-between rounded-xl border border-violet-500/25 bg-violet-500/10 px-3.5 py-3">
                   <div>
                     <p className="text-[11px] text-mist-400">Топ-рекомендация</p>
-                    <p className="mt-0.5 text-[13px] font-medium text-mist-100">Warsaw University of Technology</p>
-                    <p className="text-[11.5px] text-mist-400">$11 200/год · укладывается в бюджет</p>
+                    <p className="mt-0.5 text-[13px] font-medium text-mist-100">
+                      Budapest University of Technology and Economics
+                    </p>
+                    <p className="text-[11.5px] text-mist-400">$13 200/год · полная стипендия Stipendium Hungaricum</p>
                   </div>
                   <span className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-teal-400/70 font-display text-sm font-semibold tabular-nums text-teal-300">
-                    97
+                    100
                   </span>
                 </div>
               </div>
