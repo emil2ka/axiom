@@ -7,6 +7,7 @@ import {
   applyWhatIf,
   buildRoadmap,
   detectConflicts,
+  explainMemoryUpdate,
   diagnose,
   extractFacts,
   mergeFacts,
@@ -29,6 +30,14 @@ const MEMORY_FIELDS = [
   "constraints",
 ] as const;
 
+const revisionSchema = z.object({
+  value: z.string().min(1).max(600),
+  display: z.string().min(1).max(600),
+  numeric: z.number().nullish(),
+  source: z.enum(["voice", "text", "manual", "demo"]),
+  at: z.number(),
+});
+
 const memorySchema = z.object({
   id: z.string().min(1).max(80),
   field: z.enum(MEMORY_FIELDS),
@@ -40,12 +49,19 @@ const memorySchema = z.object({
   numeric: z.number().nullish(),
   source: z.enum(["voice", "text", "manual", "demo"]),
   createdAt: z.number(),
+  history: z.array(revisionSchema).max(20).optional(),
 });
 
 const memoriesSchema = z.array(memorySchema).max(100);
 
+// zod отдаёт nullish как number | null | undefined, движок работает с undefined.
+// Нормализуем и сам факт, и каждую ревизию в его истории.
 const toMemories = (input: z.infer<typeof memoriesSchema>): MemoryFact[] =>
-  input.map((item) => ({ ...item, numeric: item.numeric ?? undefined }));
+  input.map((item) => ({
+    ...item,
+    numeric: item.numeric ?? undefined,
+    history: item.history?.map((revision) => ({ ...revision, numeric: revision.numeric ?? undefined })),
+  }));
 
 const schemas = {
   extract: z
@@ -80,6 +96,16 @@ const schemas = {
     })
     .strict(),
   conflicts: z.object({ memories: memoriesSchema }).strict(),
+  memoryUpdate: z
+    .object({
+      memories: memoriesSchema,
+      text: z.string().min(1).max(2000).optional(),
+      facts: memoriesSchema.optional(),
+    })
+    .strict()
+    .refine((value) => value.text !== undefined || value.facts !== undefined, {
+      message: "нужен text или facts",
+    }),
 };
 
 const app = express();
@@ -218,6 +244,20 @@ app.post(
       return;
     }
     res.json({ conflicts: detectConflicts(toMemories(parsed.data.memories)) });
+  }),
+);
+
+app.post(
+  "/memory/update",
+  wrap(async (req, res) => {
+    const parsed = schemas.memoryUpdate.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "invalid_body", details: parsed.error.flatten() });
+      return;
+    }
+    const { memories, text, facts } = parsed.data;
+    const incoming = facts ? toMemories(facts) : extractFacts(text ?? "", { source: "text" });
+    res.json(explainMemoryUpdate(toMemories(memories), incoming));
   }),
 );
 

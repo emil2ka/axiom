@@ -3,6 +3,7 @@ import type {
   MemoryFact,
   PriorityKey,
   Program,
+  RankDiff,
   Reason,
   RecommendResult,
   Recommendation,
@@ -503,4 +504,51 @@ export function recommend(memories: MemoryFact[], options: RecommendOptions = {}
     appliedPriority,
     priorityNote: describePriorityEffect(appliedPriority),
   };
+}
+
+export interface RankingDiff {
+  moved: RankDiff[];
+  entered: RankDiff[];
+  dropped: RankDiff[];
+}
+
+const programLabel = (item: Recommendation): string => `${item.program.university} — ${item.program.city}`;
+
+/**
+ * Сравнивает два рейтинга по топ-N: кто сдвинулся, кто вошёл, кто выпал.
+ * Одна реализация на What If и на объяснение правок памяти — раньше логика
+ * была продублирована и могла разойтись.
+ */
+export function diffRankings(base: Recommendation[], next: Recommendation[], topN = 5): RankingDiff {
+  const baseTop = new Map(base.slice(0, topN).map((item) => [item.program.id, item.rank]));
+  const nextTop = new Map(next.slice(0, topN).map((item) => [item.program.id, item.rank]));
+
+  const moved: RankDiff[] = [];
+  const entered: RankDiff[] = [];
+  const dropped: RankDiff[] = [];
+
+  for (const item of next.slice(0, topN)) {
+    const before = baseTop.get(item.program.id);
+    if (before === undefined) {
+      entered.push({ programId: item.program.id, name: programLabel(item), baseRank: 0, newRank: item.rank, delta: 0 });
+      continue;
+    }
+    const delta = before - item.rank;
+    if (delta !== 0) {
+      moved.push({ programId: item.program.id, name: programLabel(item), baseRank: before, newRank: item.rank, delta });
+    }
+  }
+
+  for (const item of base.slice(0, topN)) {
+    if (!nextTop.has(item.program.id)) {
+      dropped.push({ programId: item.program.id, name: programLabel(item), baseRank: item.rank, newRank: 0, delta: 0 });
+    }
+  }
+
+  return { moved, entered, dropped };
+}
+
+/** Сколько программ не укладывается в бюджет профиля. */
+export function countOverBudget(recommendations: Recommendation[]): number {
+  return recommendations.filter((item) => item.budgetDeltaUsd !== null && item.budgetDeltaUsd < 0).length;
 }

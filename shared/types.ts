@@ -16,6 +16,15 @@ export type MemorySource = "voice" | "text" | "manual" | "demo";
 /** Что для абитуриента важнее всего — извлекается из памяти и меняет веса скоринга. */
 export type PriorityKey = "country" | "budget" | "scholarship" | "ranking";
 
+/** Снимок прежнего значения факта — память помнит, каким он был. */
+export interface MemoryRevision {
+  value: string;
+  display: string;
+  numeric?: number;
+  source: MemorySource;
+  at: number;
+}
+
 export interface MemoryFact {
   id: string;
   field: MemoryField;
@@ -27,6 +36,41 @@ export interface MemoryFact {
   numeric?: number;
   source: MemorySource;
   createdAt: number;
+  /** Предыдущие значения, свежие первыми. Пусто, пока факт не меняли. */
+  history?: MemoryRevision[];
+}
+
+export type MemoryChangeKind = "added" | "updated" | "extended" | "unchanged";
+
+/** Что именно произошло с одним фактом при обновлении памяти. */
+export interface MemoryChange {
+  field: MemoryField;
+  label: string;
+  kind: MemoryChangeKind;
+  /** Как факт выглядел раньше. Для added — отсутствует. */
+  before?: string;
+  after: string;
+  quote: string;
+  at: number;
+}
+
+export interface MergeResult {
+  memories: MemoryFact[];
+  changes: MemoryChange[];
+}
+
+/** Как обновление памяти отразилось на рекомендациях. */
+export interface MemoryImpact {
+  changes: MemoryChange[];
+  diff: {
+    moved: RankDiff[];
+    entered: RankDiff[];
+    dropped: RankDiff[];
+  };
+  /** Сколько программ не укладывалось в бюджет до и после. */
+  overBudget: { before: number; after: number };
+  /** Человекочитаемое «что изменилось и к чему это привело». */
+  summary: string;
 }
 
 export interface Profile {

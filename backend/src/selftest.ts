@@ -9,6 +9,10 @@ import {
   detectConflicts,
   diagnose,
   estimateImpact,
+  explainMemoryUpdate,
+  factTimeline,
+  mergeFactsWithDiff,
+  revisionCount,
   getGpaPercent,
   extractFacts,
   mergeFacts,
@@ -339,6 +343,50 @@ check(
   diagnose(gpa38).strengths.some((item) => item.includes("95%")),
   diagnose(gpa38).strengths.join(" | "),
 );
+
+console.log("\n[12] История памяти и объяснение правок");
+const startMem = extractFacts("Хочу в Европу, бюджет до $15k, интересует IT, IELTS 6.5, средний балл 4.6", { now });
+
+const added = mergeFactsWithDiff([], startMem);
+check("новые факты помечены как added", added.changes.every((change) => change.kind === "added"), added.changes.map((change) => change.kind).join(","));
+check("у новых фактов истории нет", added.memories.every((item) => item.history === undefined || item.history.length === 0));
+
+const cut = mergeFactsWithDiff(startMem, extractFacts("Теперь бюджет до $10k", { now }));
+const budgetChange = cut.changes.find((change) => change.field === "budget");
+check("правка помечена как updated", budgetChange?.kind === "updated", budgetChange?.kind);
+check("в diff сохранено прежнее значение", budgetChange?.before?.includes("15") === true, budgetChange?.before);
+check("и новое значение", budgetChange?.after?.includes("10") === true, budgetChange?.after);
+
+const budgetFact = cut.memories.find((item) => item.field === "budget")!;
+check("прежнее значение ушло в историю", revisionCount(budgetFact) === 1, String(revisionCount(budgetFact)));
+check("история хранит именно старое значение", budgetFact.history?.[0].display.includes("15") === true, budgetFact.history?.[0].display);
+check("id факта сохраняется при правке", budgetFact.id === startMem.find((item) => item.field === "budget")!.id);
+check("таймлайн отдаёт текущее значение первым", factTimeline(budgetFact)[0].current && factTimeline(budgetFact).length === 2);
+
+const repeat = mergeFactsWithDiff(cut.memories, extractFacts("Бюджет до $10k", { now }));
+check("повтор того же факта не создаёт ревизию", revisionCount(repeat.memories.find((item) => item.field === "budget")!) === 1);
+check("и помечается как unchanged", repeat.changes.find((change) => change.field === "budget")?.kind === "unchanged");
+
+const extended = mergeFactsWithDiff(startMem, extractFacts("Ещё рассматриваю Финляндию", { now }));
+check("список стран расширяется, а не затирается", extended.memories.find((item) => item.field === "country")?.value.includes("Европа") === true);
+check("расширение помечено как extended", extended.changes.find((change) => change.field === "country")?.kind === "extended");
+
+const cutImpact = explainMemoryUpdate(startMem, extractFacts("Теперь бюджет до $10k", { now }));
+check("объяснение называет обе величины", cutImpact.summary.includes("15") && cutImpact.summary.includes("10"), cutImpact.summary);
+check("и считает, сколько программ вышло за бюджет", cutImpact.overBudget.after > cutImpact.overBudget.before, `${cutImpact.overBudget.before} → ${cutImpact.overBudget.after}`);
+check("объяснение читается как фраза, а не как дамп", cutImpact.summary.length > 40 && cutImpact.summary.endsWith("."), cutImpact.summary);
+
+const noopImpact = explainMemoryUpdate(startMem, extractFacts("Бюджет до $15k", { now }));
+check("повтор факта честно сообщает, что нового нет", noopImpact.summary.includes("уже были в памяти"), noopImpact.summary);
+
+const silentImpact = explainMemoryUpdate(startMem, extractFacts("Меня зовут Алия", { now }));
+check(
+  "правка без влияния на рейтинг не выдумывает эффекта",
+  silentImpact.diff.moved.length === 0 && silentImpact.diff.entered.length === 0,
+  silentImpact.summary,
+);
+
+check("mergeFacts остался совместимым", mergeFacts(startMem, extractFacts("Теперь бюджет до $10k", { now })).length === startMem.length);
 
 console.log(`\nИтог: ${passed} ok, ${failed} fail\n`);
 if (failed > 0) process.exit(1);

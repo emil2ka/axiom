@@ -3,6 +3,7 @@ export * from "./format";
 export * from "./profile";
 export * from "./extract";
 export * from "./recommend";
+export * from "./memory";
 export * from "./whatif";
 export * from "./roadmap";
 export * from "./diagnosis";

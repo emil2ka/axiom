@@ -1,4 +1,11 @@
-import type { MemoryFact, MemoryField, MemorySource } from "../types";
+import type {
+  MemoryChange,
+  MemoryFact,
+  MemoryField,
+  MemoryRevision,
+  MemorySource,
+  MergeResult,
+} from "../types";
 import { FIELD_LABELS, splitValues } from "./profile";
 import { formatUsd } from "./format";
 
@@ -473,33 +480,137 @@ function assembleFacts(candidates: Candidate[], source: MemorySource): Omit<Memo
   return facts.map(({ order: _order, ...rest }) => rest);
 }
 
-export function mergeFacts(existing: MemoryFact[], incoming: MemoryFact[]): MemoryFact[] {
+const HISTORY_LIMIT = 6;
+
+function snapshot(item: MemoryFact): MemoryRevision {
+  return {
+    value: item.value,
+    display: item.display,
+    numeric: item.numeric,
+    source: item.source,
+    at: item.createdAt,
+  };
+}
+
+function withHistory(previous: MemoryFact, next: Omit<MemoryFact, "history">): MemoryFact {
+  return {
+    ...next,
+    // Идентичность факта в памяти — это поле, а не id: пользователь редактирует
+    // «Бюджет», а не конкретную запись. Поэтому id сохраняем, чтобы чип не «прыгал».
+    id: previous.id,
+    history: [snapshot(previous), ...(previous.history ?? [])].slice(0, HISTORY_LIMIT),
+  };
+}
+
+/**
+ * Сливает новые факты в память и рассказывает, что именно изменилось.
+ * Прежние значения не теряются — они уходят в history, поэтому память может
+ * ответить на вопрос «а что ты говорил раньше».
+ */
+export function mergeFactsWithDiff(existing: MemoryFact[], incoming: MemoryFact[]): MergeResult {
   const result = [...existing];
+  const changes: MemoryChange[] = [];
   const mergeable = new Set<MemoryField>(["interests", "country", "constraints", "language"]);
 
   for (const fresh of incoming) {
     const index = result.findIndex((item) => item.field === fresh.field);
+
     if (index === -1) {
       result.push(fresh);
+      changes.push({
+        field: fresh.field,
+        label: fresh.label,
+        kind: "added",
+        after: fresh.display,
+        quote: fresh.quote,
+        at: fresh.createdAt,
+      });
       continue;
     }
+
+    const previous = result[index];
+
     if (mergeable.has(fresh.field)) {
-      const values = new Set([...splitValues(result[index].value), ...splitValues(fresh.value)]);
-      const value = [...values].join("; ");
-      result[index] = {
-        ...result[index],
+      const known = splitValues(previous.value);
+      const added = splitValues(fresh.value).filter((value) => !known.includes(value));
+      if (!added.length) {
+        changes.push({
+          field: fresh.field,
+          label: fresh.label,
+          kind: "unchanged",
+          before: previous.display,
+          after: previous.display,
+          quote: fresh.quote || previous.quote,
+          at: fresh.createdAt,
+        });
+        continue;
+      }
+      const value = [...known, ...added].join("; ");
+      result[index] = withHistory(previous, {
+        ...previous,
         value,
         display: value,
-        quote: fresh.quote || result[index].quote,
-        confidence: Math.max(result[index].confidence, fresh.confidence),
+        quote: fresh.quote || previous.quote,
+        confidence: Math.max(previous.confidence, fresh.confidence),
         source: fresh.source,
         createdAt: fresh.createdAt,
-      };
-    } else {
-      result[index] = { ...fresh };
+      });
+      changes.push({
+        field: fresh.field,
+        label: fresh.label,
+        kind: "extended",
+        before: previous.display,
+        after: value,
+        quote: fresh.quote || previous.quote,
+        at: fresh.createdAt,
+      });
+      continue;
     }
+
+    if (previous.value === fresh.value) {
+      changes.push({
+        field: fresh.field,
+        label: fresh.label,
+        kind: "unchanged",
+        before: previous.display,
+        after: fresh.display,
+        quote: fresh.quote || previous.quote,
+        at: fresh.createdAt,
+      });
+      continue;
+    }
+
+    result[index] = withHistory(previous, { ...fresh, id: previous.id });
+    changes.push({
+      field: fresh.field,
+      label: fresh.label,
+      kind: "updated",
+      before: previous.display,
+      after: fresh.display,
+      quote: fresh.quote,
+      at: fresh.createdAt,
+    });
   }
-  return result;
+
+  return { memories: result, changes };
+}
+
+/** Совместимая обёртка: та же память, без описания изменений. */
+export function mergeFacts(existing: MemoryFact[], incoming: MemoryFact[]): MemoryFact[] {
+  return mergeFactsWithDiff(existing, incoming).memories;
+}
+
+/** «Бюджет: до $15 000 → до $10 000; Страна: добавилась Финляндия» */
+export function describeMemoryChanges(changes: MemoryChange[]): string {
+  const meaningful = changes.filter((change) => change.kind !== "unchanged");
+  if (!meaningful.length) return "";
+  return meaningful
+    .map((change) => {
+      if (change.kind === "added") return `${change.label}: ${change.after}`;
+      if (change.kind === "extended") return `${change.label}: добавилось «${change.after.split("; ").slice(-1)[0]}»`;
+      return `${change.label}: ${change.before} → ${change.after}`;
+    })
+    .join("; ");
 }
 
 export function describeFacts(facts: MemoryFact[]): string {

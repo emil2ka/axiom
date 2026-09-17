@@ -1,7 +1,14 @@
-import type { MemoryFact, RankDiff, RecommendResult, ScoreWeights, WhatIfParams, WhatIfResult } from "../types";
+import type { MemoryFact, ScoreWeights, WhatIfParams, WhatIfResult } from "../types";
 import { pluralRu } from "./format";
 import { getPriority } from "./profile";
-import { DEFAULT_WEIGHTS, PRIORITY_LABEL_RU, normalizeWeights, recommend } from "./recommend";
+import {
+  DEFAULT_WEIGHTS,
+  PRIORITY_LABEL_RU,
+  countOverBudget,
+  diffRankings,
+  normalizeWeights,
+  recommend,
+} from "./recommend";
 
 export interface WhatIfPreset {
   id: string;
@@ -50,13 +57,6 @@ export function buildWeights(params: WhatIfParams): ScoreWeights {
   return normalizeWeights(base);
 }
 
-function rankMap(result: RecommendResult, topN?: number): Map<string, number> {
-  const map = new Map<string, number>();
-  const list = topN ? result.recommendations.slice(0, topN) : result.recommendations;
-  for (const item of list) map.set(item.program.id, item.rank);
-  return map;
-}
-
 export function applyWhatIf(memories: MemoryFact[], params: WhatIfParams): WhatIfResult {
   const base = recommend(memories);
   const weights = buildWeights(params);
@@ -68,39 +68,9 @@ export function applyWhatIf(memories: MemoryFact[], params: WhatIfParams): WhatI
 
   const adjusted = recommend(memories, { weights, overrides });
 
-  const baseTop = rankMap(base, 5);
-  const newTop = rankMap(adjusted, 5);
-
-  const moved: RankDiff[] = [];
-  const entered: RankDiff[] = [];
-  const dropped: RankDiff[] = [];
-
-  for (const item of adjusted.recommendations.slice(0, 5)) {
-    const id = item.program.id;
-    const name = `${item.program.university} — ${item.program.city}`;
-    const before = baseTop.get(id);
-    if (before === undefined) {
-      entered.push({ programId: id, name, baseRank: 0, newRank: item.rank, delta: 0 });
-      continue;
-    }
-    const delta = before - item.rank;
-    if (delta !== 0) moved.push({ programId: id, name, baseRank: before, newRank: item.rank, delta });
-  }
-
-  for (const item of base.recommendations.slice(0, 5)) {
-    if (!newTop.has(item.program.id)) {
-      dropped.push({
-        programId: item.program.id,
-        name: `${item.program.university} — ${item.program.city}`,
-        baseRank: item.rank,
-        newRank: 0,
-        delta: 0,
-      });
-    }
-  }
-
-  const baseOut = base.recommendations.filter((item) => item.budgetDeltaUsd !== null && item.budgetDeltaUsd < 0).length;
-  const newOut = adjusted.recommendations.filter((item) => item.budgetDeltaUsd !== null && item.budgetDeltaUsd < 0).length;
+  const { moved, entered, dropped } = diffRankings(base.recommendations, adjusted.recommendations, 5);
+  const baseOut = countOverBudget(base.recommendations);
+  const newOut = countOverBudget(adjusted.recommendations);
 
   const summaryParts: string[] = [];
   const topMover = [...moved].sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))[0];
