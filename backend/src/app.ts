@@ -8,7 +8,7 @@ import {
   llmProviderName,
 } from "./llm";
 import { accessLog, rateLimit, requestId } from "./http";
-import { logError } from "./log";
+import { logError, logInfo } from "./log";
 import { snapshot } from "./metrics";
 import {
   PROGRAMS,
@@ -18,7 +18,7 @@ import {
   explainMemoryUpdate,
   diagnose,
   extractFacts,
-  mergeFacts,
+  reconcileEnrichment,
   recommend,
   selectNextQuestion,
   type MemoryFact,
@@ -221,8 +221,20 @@ export function createApp(options: AppOptions = {}) {
       const ruleFacts = extractFacts(text, { source: source ?? "text" });
       const llmFacts = await llmExtractFacts(text);
       if (llmFacts && llmFacts.length) {
-        const merged = mergeFacts(ruleFacts, llmFacts);
-        res.json({ facts: merged, engine: "llm" });
+        // Модель может только дополнить: перезаписывать надёжно извлечённое ей
+        // не разрешено, а факты без опоры на текст отбрасываются.
+        const enrichment = reconcileEnrichment(ruleFacts, llmFacts, text);
+        if (enrichment.rejected.length) {
+          logInfo("llm_facts_rejected", {
+            requestId: req.requestId,
+            rejected: enrichment.rejected.map((item) => `${item.field}: ${item.reason}`),
+          });
+        }
+        res.json({
+          facts: enrichment.facts,
+          engine: enrichment.added.length ? "llm" : "rules",
+          enrichedFields: enrichment.added.map((item) => item.field),
+        });
         return;
       }
       res.json({ facts: ruleFacts, engine: "rules" });

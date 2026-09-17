@@ -727,3 +727,11 @@ export function describeFacts(facts: MemoryFact[]): string {
 export function knownCountryNames(): string[] {
   return COUNTRY_ORDER;
 }
+
+export function knownLanguageNames(): string[] {
+  return LANGUAGE_PATTERNS.map((item) => item.label);
+}
+
+export function knownInterestLabels(): string[] {
+  return INTEREST_PATTERNS.map((item) => item.label);
+}

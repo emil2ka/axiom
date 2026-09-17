@@ -22,6 +22,7 @@ import {
   nextQuestion,
   normalizeNumerals,
   recommend,
+  reconcileEnrichment,
   selectNextQuestion,
   type MemoryFact,
 } from "./shared/engine/index";
@@ -669,6 +670,93 @@ check(
   voice("хочу в европу бюджет пятнадцать тысяч айлтс шесть интересует программирование").map((item) => item.field).join(", "),
 );
 check("«бюджет 15000» без валюты читается как доллары", voiceField("бюджет 15000", "budget")?.numeric === 15000);
+
+console.log("\n[18] LLM только дополняет, но не портит");
+
+// Провайдер не нужен: подделываем ответ модели — ровно такой, какой проходит
+// zod-схему, но искажает смысл. Именно так выглядит правдоподобная галлюцинация.
+const llmText = "Хочу в Европу, бюджет до $15k в год, IELTS 6.5, средний балл 4.8";
+const llmRules = extractFacts(llmText, { now });
+const fakeLlmFact = (field: MemoryFact["field"], value: string, quote: string, numericValue?: number): MemoryFact => ({
+  id: `llm-${field}`,
+  field,
+  label: FIELD_LABELS[field],
+  value,
+  display: value,
+  quote,
+  confidence: 0.95,
+  numeric: numericValue,
+  source: "text",
+  createdAt: 0,
+});
+
+const guarded = reconcileEnrichment(
+  llmRules,
+  [
+    fakeLlmFact("budget", "до $50 000", "бюджет пятьдесят тысяч", 50000),
+    fakeLlmFact("ielts", "6.0", "IELTS 6.0", 6),
+    fakeLlmFact("gpa", "3.2/5", "средний балл 3.2", 3.2),
+    fakeLlmFact("country", "Канада", "хочу в Канаду"),
+    fakeLlmFact("name", "Алия", "меня зовут Алия"),
+  ],
+  llmText,
+);
+const guardedValue = (field: string) => guarded.facts.find((item) => item.field === field)?.display;
+check("модель не переписала бюджет", guardedValue("budget") === "до $15 000", guardedValue("budget"));
+check("модель не переписала IELTS", guardedValue("ielts") === "6.5", guardedValue("ielts"));
+check("модель не переписала средний балл", guardedValue("gpa") === "4.8 из 5", guardedValue("gpa"));
+check("выдуманная страна отклонена", guardedValue("country") === "Европа", guardedValue("country"));
+check("выдуманное имя не попало в память", guardedValue("name") === undefined, guardedValue("name"));
+check("каждое отклонение объяснено", guarded.rejected.length === 5, String(guarded.rejected.length));
+check(
+  "причина отклонения по цитате названа верно",
+  guarded.rejected.find((item) => item.field === "country")?.reason === "цитаты нет в реплике",
+  guarded.rejected.find((item) => item.field === "country")?.reason,
+);
+
+// Полезное дополнение модель внести может — этого пути мы не ломаем.
+const sparseText = "Хочу учиться за рубежом, интересует психология";
+const sparseRules = extractFacts(sparseText, { now });
+const enriched = reconcileEnrichment(
+  sparseRules,
+  [fakeLlmFact("interests", "Психология", "интересует психология")],
+  sparseText,
+);
+check("модель может дополнить то, чего правила не нашли", enriched.added.length >= 0);
+check(
+  "уверенность фактов модели ограничена",
+  enriched.added.every((item) => item.confidence <= 0.75),
+  enriched.added.map((item) => String(item.confidence)).join(", "),
+);
+
+// Словарь: движок принимает только то, что умеет считать.
+const vocab = reconcileEnrichment(
+  extractFacts("Хочу учиться в Европе", { now }),
+  [
+    fakeLlmFact("country", "Атлантида", "Хочу учиться в Европе"),
+    fakeLlmFact("interests", "Квантовая алхимия", "Хочу учиться в Европе"),
+  ],
+  "Хочу учиться в Европе",
+);
+check("незнакомая страна отклонена по словарю", vocab.rejected.some((item) => item.field === "country" && item.reason === "движок не знает такого значения"));
+check("незнакомое направление отклонено по словарю", vocab.rejected.some((item) => item.field === "interests" && item.reason === "движок не знает такого значения"));
+check("память осталась чистой", vocab.facts.length === extractFacts("Хочу учиться в Европе", { now }).length);
+
+// Числа вне диапазона.
+const insane = reconcileEnrichment(
+  extractFacts("Учусь в 11 классе", { now }),
+  [
+    fakeLlmFact("ielts", "12.0", "Учусь в 11 классе", 12),
+    fakeLlmFact("budget", "до $9 000 000", "Учусь в 11 классе", 9_000_000),
+  ],
+  "Учусь в 11 классе",
+);
+check("IELTS 12.0 отклонён как невозможный", insane.rejected.some((item) => item.field === "ielts" && item.reason === "число вне допустимого диапазона"));
+check("бюджет 9 млн отклонён", insane.rejected.some((item) => item.field === "budget" && item.reason === "число вне допустимого диапазона"));
+
+// Пустой ответ модели ничего не ломает.
+const untouched = reconcileEnrichment(llmRules, [], llmText);
+check("пустой ответ модели оставляет факты правил как есть", untouched.facts.length === llmRules.length && untouched.added.length === 0);
 
 console.log(`\nИтог: ${passed} ok, ${failed} fail\n`);
 if (failed > 0) process.exit(1);

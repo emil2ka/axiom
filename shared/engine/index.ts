@@ -1,5 +1,6 @@
 export * from "../types";
 export * from "./format";
+export * from "./enrich";
 export * from "./numerals";
 export * from "./profile";
 export * from "./extract";
