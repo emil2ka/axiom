@@ -206,6 +206,20 @@ export function totalPerYear(program: Program): number {
  * годы: четырёхлетняя за $11 000 дороже трёхлетней за $13 000. Без этого
  * движок считал их равными, а семья узнавала разницу уже после выбора.
  */
+/**
+ * Сколько человек реально платит за год с учётом стипендии.
+ *
+ * Раньше «полная» стипендия означала «исчезает 85% всех расходов». Но у Aalto и
+ * Tampere это tuition fee waiver, а Stipendium Hungaricum прямо пишет, что его
+ * выплаты — «only a contribution to the living expenses». Проживание в обоих
+ * случаях остаётся на студенте, и занижение выходило втрое.
+ */
+export function effectiveAnnualCost(program: Program): number {
+  if (program.scholarship !== "full") return totalPerYear(program);
+  const living = Math.max(0, program.livingPerYearUsd - (program.scholarshipLivingSupportUsd ?? 0));
+  return living;
+}
+
 export function totalProgramCost(program: Program): number {
   return Math.round(totalPerYear(program) * program.durationYears);
 }
@@ -230,7 +244,7 @@ function scoreComponents(program: Program, ctx: ScoreContext): ScoredParts {
   const w = ctx.weights;
 
   let budgetComponent = 0.55;
-  const effectiveCost = program.scholarship === "full" ? total * 0.15 : total;
+  const effectiveCost = effectiveAnnualCost(program);
   if (ctx.budget && ctx.budget > 0) {
     const ratio = effectiveCost / ctx.budget;
     // Внутри бюджета оценка непрерывна, а не «всё подходящее = 1.0»: запас
@@ -249,8 +263,12 @@ function scoreComponents(program: Program, ctx: ScoreContext): ScoredParts {
         ? (1 - 0.15 * ratio) * durationPenalty
         : Math.max(0.05, 0.85 * Math.exp(-2.4 * (ratio - 1)) * durationPenalty);
     if (program.scholarship === "full") {
+      const outOfPocket = effectiveAnnualCost(program);
       reasons.push({
-        text: `Стипендия покрывает обучение и проживание — стоимость почти не расходует бюджет`,
+        text:
+          outOfPocket <= 0
+            ? `Стипендия покрывает и обучение, и проживание`
+            : `Стипендия снимает плату за обучение — остаётся ${formatUsd(outOfPocket)}/год на жизнь`,
         weight: w.budget * budgetComponent,
         field: "program",
       });

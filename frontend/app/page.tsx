@@ -181,10 +181,10 @@ export default function LandingPage() {
                     <p className="mt-0.5 text-[13px] font-medium text-mist-100">
                       Budapest University of Technology and Economics
                     </p>
-                    <p className="text-[11.5px] text-mist-400">$13 200/год · полная стипендия Stipendium Hungaricum</p>
+                    <p className="text-[11.5px] text-mist-400">$13 200/год · Stipendium Hungaricum: обучение бесплатно</p>
                   </div>
                   <span className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-teal-400/70 font-display text-sm font-semibold tabular-nums text-teal-300">
-                    100
+                    99
                   </span>
                 </div>
               </div>

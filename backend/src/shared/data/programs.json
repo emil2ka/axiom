@@ -19,6 +19,7 @@
     "tuitionPerYearUsd": 4000,
     "livingPerYearUsd": 7200,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Rector's scholarship для лучших студентов, покрывает 30–50% обучения",
     "deadlines": [
       {
@@ -62,6 +63,7 @@
     "tuitionPerYearUsd": 4200,
     "livingPerYearUsd": 7200,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Стипендии за академические успехи для студентов старших курсов",
     "deadlines": [
       {
@@ -103,6 +105,7 @@
     "tuitionPerYearUsd": 3600,
     "livingPerYearUsd": 7200,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Скидки за портфолио и академические успехи",
     "deadlines": [
       {
@@ -144,6 +147,7 @@
     "tuitionPerYearUsd": 3600,
     "livingPerYearUsd": 7200,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Стипендии за успеваемость",
     "deadlines": [
       {
@@ -186,6 +190,7 @@
     "tuitionPerYearUsd": 5200,
     "livingPerYearUsd": 7800,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Стипендии за академические результаты и научные проекты",
     "deadlines": [
       {
@@ -227,6 +232,7 @@
     "tuitionPerYearUsd": 5000,
     "livingPerYearUsd": 7800,
     "scholarship": "none",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Платные программы, отдельных стипендий нет",
     "deadlines": [
       {
@@ -269,6 +275,7 @@
     "tuitionPerYearUsd": 0,
     "livingPerYearUsd": 13200,
     "scholarship": "none",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Обучение бесплатное (семестровый сбор ~600 €/год), живут на свои средства или DAAD",
     "deadlines": [
       {
@@ -311,6 +318,7 @@
     "tuitionPerYearUsd": 3800,
     "livingPerYearUsd": 9600,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Стоимость зависит от дохода семьи (ISEE); merit-стипендии до €5 000/год",
     "deadlines": [
       {
@@ -353,6 +361,7 @@
     "tuitionPerYearUsd": 3000,
     "livingPerYearUsd": 8400,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Региональные стипендии и освобождение от оплаты по ISEE",
     "deadlines": [
       {
@@ -395,6 +404,7 @@
     "tuitionPerYearUsd": 3300,
     "livingPerYearUsd": 9000,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Стипендии университета и фондов для иностранных студентов",
     "deadlines": [
       {
@@ -436,6 +446,7 @@
     "tuitionPerYearUsd": 16200,
     "livingPerYearUsd": 11000,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Twente Scholarship: €3 000–€5 000/год для иностранных студентов",
     "deadlines": [
       {
@@ -476,10 +487,11 @@
     "language": "Английский",
     "ieltsMin": 6.5,
     "gpaMinPercent": 88,
-    "tuitionPerYearUsd": 16000,
+    "tuitionPerYearUsd": 12960,
     "livingPerYearUsd": 9600,
     "scholarship": "full",
-    "scholarshipNote": "Merit-стипендия Aalto покрывает 50–100% стоимости обучения для не-ЕС студентов",
+    "scholarshipLivingSupportUsd": 0,
+    "scholarshipNote": "Стипендия Aalto — освобождение от платы за обучение (tuition fee waiver), число мест ограничено, отбор конкурсный. Проживание оплачивается самостоятельно",
     "deadlines": [
       {
         "intake": "Осень 2027",
@@ -495,8 +507,8 @@
     ],
     "sources": [
       {
-        "label": "Официальный сайт вуза",
-        "url": "https://www.aalto.fi/en"
+        "label": "Aalto: Scholarships and tuition fees",
+        "url": "https://www.aalto.fi/en/admission-services/scholarships-and-tuition-fees"
       }
     ],
     "demo": true
@@ -521,7 +533,8 @@
     "tuitionPerYearUsd": 6600,
     "livingPerYearUsd": 6600,
     "scholarship": "full",
-    "scholarshipNote": "Stipendium Hungaricum: полное покрытие обучения, проживания и медстраховки",
+    "scholarshipLivingSupportUsd": 2720,
+    "scholarshipNote": "Stipendium Hungaricum: обучение бесплатно, стипендия ~€110/мес и вклад в жильё ~€100/мес. Официально это «вклад в расходы», а не полное покрытие проживания",
     "deadlines": [
       {
         "intake": "Осень 2027",
@@ -542,12 +555,8 @@
     ],
     "sources": [
       {
-        "label": "Официальный сайт вуза",
-        "url": "https://www.bme.hu/?language=en"
-      },
-      {
-        "label": "Stipendium Hungaricum",
-        "url": "https://stipendiumhungaricum.hu/"
+        "label": "Stipendium Hungaricum: что покрывает стипендия",
+        "url": "https://stipendiumhungaricum.hu/about/"
       }
     ],
     "demo": true
@@ -571,6 +580,7 @@
     "tuitionPerYearUsd": 11800,
     "livingPerYearUsd": 11000,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Holland Scholarship €5 000 для первокурсников из не-ЕС",
     "deadlines": [
       {
@@ -612,6 +622,7 @@
     "tuitionPerYearUsd": 3000,
     "livingPerYearUsd": 6500,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Скидки за высокий средний балл, до 30% обучения",
     "deadlines": [
       {
@@ -655,6 +666,7 @@
     "tuitionPerYearUsd": 4500,
     "livingPerYearUsd": 7000,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Merit-стипендия до 50% обучения со второго года",
     "deadlines": [
       {
@@ -698,6 +710,7 @@
     "tuitionPerYearUsd": 3200,
     "livingPerYearUsd": 6300,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Стипендия за успеваемость, покрывает часть обучения",
     "deadlines": [
       {
@@ -741,6 +754,7 @@
     "tuitionPerYearUsd": 4200,
     "livingPerYearUsd": 6500,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Скидка за результаты вступительного портфолио",
     "deadlines": [
       {
@@ -783,6 +797,7 @@
     "tuitionPerYearUsd": 3500,
     "livingPerYearUsd": 6800,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Стипендия за успеваемость со второго семестра",
     "deadlines": [
       {
@@ -826,6 +841,7 @@
     "tuitionPerYearUsd": 14500,
     "livingPerYearUsd": 8000,
     "scholarship": "none",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Отдельных стипендий нет, программа полностью платная",
     "deadlines": [
       {
@@ -869,6 +885,7 @@
     "tuitionPerYearUsd": 3800,
     "livingPerYearUsd": 6500,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Стипендия за отличную успеваемость",
     "deadlines": [
       {
@@ -911,6 +928,7 @@
     "tuitionPerYearUsd": 0,
     "livingPerYearUsd": 10500,
     "scholarship": "none",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Обучение бесплатное (семестровый сбор ~600 €/год), проживание за свой счёт или DAAD",
     "deadlines": [
       {
@@ -953,6 +971,7 @@
     "tuitionPerYearUsd": 0,
     "livingPerYearUsd": 11000,
     "scholarship": "none",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Обучение бесплатное (семестровый сбор ~600 €/год), проживание за свой счёт или DAAD",
     "deadlines": [
       {
@@ -996,6 +1015,7 @@
     "tuitionPerYearUsd": 22000,
     "livingPerYearUsd": 10000,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Merit-стипендии покрывают до 50% обучения",
     "deadlines": [
       {
@@ -1038,6 +1058,7 @@
     "tuitionPerYearUsd": 3200,
     "livingPerYearUsd": 9000,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Стипендия по доходу семьи снижает взнос почти до нуля",
     "deadlines": [
       {
@@ -1081,6 +1102,7 @@
     "tuitionPerYearUsd": 3500,
     "livingPerYearUsd": 9500,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Взнос по доходу семьи + региональные стипендии EDISU",
     "deadlines": [
       {
@@ -1124,6 +1146,7 @@
     "tuitionPerYearUsd": 3000,
     "livingPerYearUsd": 10500,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Взнос по доходу семьи, стипендии DSU покрывают жильё",
     "deadlines": [
       {
@@ -1167,6 +1190,7 @@
     "tuitionPerYearUsd": 6500,
     "livingPerYearUsd": 9500,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Стипендии министерства образования для иностранных студентов",
     "deadlines": [
       {
@@ -1210,6 +1234,7 @@
     "tuitionPerYearUsd": 2500,
     "livingPerYearUsd": 8500,
     "scholarship": "none",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Стипендий для не-ЕС студентов практически нет, но сама плата низкая",
     "deadlines": [
       {
@@ -1253,6 +1278,7 @@
     "tuitionPerYearUsd": 11000,
     "livingPerYearUsd": 12000,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Holland Scholarship — единоразово €5000 на первый год",
     "deadlines": [
       {
@@ -1295,6 +1321,7 @@
     "tuitionPerYearUsd": 17000,
     "livingPerYearUsd": 12500,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Justus & Louise van Effen — частичное покрытие для лучших",
     "deadlines": [
       {
@@ -1338,7 +1365,8 @@
     "tuitionPerYearUsd": 13000,
     "livingPerYearUsd": 10500,
     "scholarship": "full",
-    "scholarshipNote": "Стипендия покрывает 100% обучения для сильных абитуриентов",
+    "scholarshipLivingSupportUsd": 0,
+    "scholarshipNote": "Стипендия покрывает плату за обучение для сильных абитуриентов. Проживание оплачивается самостоятельно",
     "deadlines": [
       {
         "intake": "Осень 2027",
@@ -1380,7 +1408,8 @@
     "tuitionPerYearUsd": 13500,
     "livingPerYearUsd": 9000,
     "scholarship": "full",
-    "scholarshipNote": "Стипендия покрывает до 100% обучения по результатам отбора",
+    "scholarshipLivingSupportUsd": 0,
+    "scholarshipNote": "Стипендия покрывает до 100% платы за обучение по результатам отбора. Проживание оплачивается самостоятельно",
     "deadlines": [
       {
         "intake": "Осень 2027",
@@ -1422,7 +1451,8 @@
     "tuitionPerYearUsd": 5500,
     "livingPerYearUsd": 7000,
     "scholarship": "full",
-    "scholarshipNote": "Stipendium Hungaricum: обучение + стипендия на проживание",
+    "scholarshipLivingSupportUsd": 2720,
+    "scholarshipNote": "Stipendium Hungaricum: обучение бесплатно, стипендия ~€110/мес и вклад в жильё ~€100/мес — проживание покрывается частично",
     "deadlines": [
       {
         "intake": "Осень 2027",
@@ -1439,8 +1469,8 @@
     ],
     "sources": [
       {
-        "label": "Stipendium Hungaricum",
-        "url": "https://stipendiumhungaricum.hu/"
+        "label": "Stipendium Hungaricum: что покрывает стипендия",
+        "url": "https://stipendiumhungaricum.hu/about/"
       }
     ],
     "demo": true
@@ -1465,6 +1495,7 @@
     "tuitionPerYearUsd": 19000,
     "livingPerYearUsd": 8000,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Скидки за результаты вступительных экзаменов",
     "deadlines": [
       {
@@ -1507,6 +1538,7 @@
     "tuitionPerYearUsd": 1600,
     "livingPerYearUsd": 12000,
     "scholarship": "none",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Стипендий для не-ЕС на бакалавриате почти нет, плата символическая",
     "deadlines": [
       {
@@ -1550,6 +1582,7 @@
     "tuitionPerYearUsd": 3200,
     "livingPerYearUsd": 13000,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Стипендия IDEX для сильных международных студентов",
     "deadlines": [
       {
@@ -1593,6 +1626,7 @@
     "tuitionPerYearUsd": 15500,
     "livingPerYearUsd": 11000,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Merit-скидки до 30% обучения",
     "deadlines": [
       {
@@ -1637,6 +1671,7 @@
     "tuitionPerYearUsd": 8000,
     "livingPerYearUsd": 9000,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Merit-стипендии для лучших по результатам отбора",
     "deadlines": [
       {
@@ -1679,6 +1714,7 @@
     "tuitionPerYearUsd": 24000,
     "livingPerYearUsd": 13000,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "UCD Global Excellence — частичное покрытие обучения",
     "deadlines": [
       {
@@ -1723,6 +1759,7 @@
     "tuitionPerYearUsd": 15000,
     "livingPerYearUsd": 12500,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "DCU International Merit — скидка на обучение",
     "deadlines": [
       {
@@ -1765,6 +1802,7 @@
     "tuitionPerYearUsd": 16500,
     "livingPerYearUsd": 13500,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "DTU Scholarship покрывает обучение для части отобранных",
     "deadlines": [
       {
@@ -1808,6 +1846,7 @@
     "tuitionPerYearUsd": 12500,
     "livingPerYearUsd": 10500,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "JU Scholarship покрывает часть обучения",
     "deadlines": [
       {
@@ -1851,6 +1890,7 @@
     "tuitionPerYearUsd": 1400,
     "livingPerYearUsd": 5000,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Türkiye Bursları покрывает обучение и проживание для отобранных",
     "deadlines": [
       {
@@ -1894,6 +1934,7 @@
     "tuitionPerYearUsd": 1600,
     "livingPerYearUsd": 6000,
     "scholarship": "partial",
+    "scholarshipLivingSupportUsd": 0,
     "scholarshipNote": "Türkiye Bursları и вузовские скидки за успеваемость",
     "deadlines": [
       {

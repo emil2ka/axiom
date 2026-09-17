@@ -45,7 +45,7 @@ const DEMO_TEXT =
 
 // Цифры, захардкоженные на лендинге (frontend/app/page.tsx).
 const LANDING_TOP_PICK = "Budapest University of Technology and Economics";
-const LANDING_TOP_SCORE = 100;
+const LANDING_TOP_SCORE = 99;
 const LANDING_TOP_COST = 13200;
 const LANDING_FACTS: { label: string; value: string }[] = [
   { label: "Страна", value: "Европа" },

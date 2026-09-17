@@ -834,19 +834,29 @@ check(
 console.log("\n[21] What If: каждый пресет что-то делает и объясняет что именно");
 
 const whatifProfile = extractFacts("Хочу в Европу, бюджет до $15k, IELTS 6.0, средний балл 4.5, интересует IT", { now });
-const whatifBase = recommend(whatifProfile).recommendations;
 
 for (const preset of WHATIF_PRESETS) {
   const result = applyWhatIf(whatifProfile, preset.params);
   check(`«${preset.label}»: сводка непустая`, result.summary.length > 20, result.summary);
   check(`«${preset.label}»: рейтинг пересчитан целиком`, result.recommendations.length === PROGRAMS.length);
   // «Сбалансировано» — это сброс к базовым весам, движения от него и не ждём.
+  // Для остальных смотрим на несколько профилей: пресет, который не двигает
+  // конкретный профиль, — это нормально и честно (человеку уже подобрано
+  // лучшее по этому критерию). Сломан тот, который не двигает никого.
   if (preset.id !== "balanced") {
-    const churn = rankingChurn(whatifBase, result.recommendations);
+    const audience = [
+      whatifProfile,
+      extractFacts("Хочу в Европу, бюджет до $25k, IELTS 6.5, интересует бизнес", { now }),
+      extractFacts("Хочу в Европу, бюджет до $12k, IELTS 6.0, интересует инженерия", { now }),
+    ];
+    const churns = audience.map((memories) =>
+      rankingChurn(recommend(memories).recommendations, applyWhatIf(memories, preset.params).recommendations),
+    );
+    const best = Math.max(...churns);
     check(
-      `«${preset.label}» заметно меняет топ-5 (${Math.round(churn * 100)}%)`,
-      churn >= 0.1,
-      `${Math.round(churn * 100)}% — пресет, который ничего не делает, хуже отсутствия пресета`,
+      `«${preset.label}» меняет выдачу хотя бы одному профилю (${Math.round(best * 100)}%)`,
+      best >= 0.15,
+      `${churns.map((value) => `${Math.round(value * 100)}%`).join(", ")} — пресет, который не двигает никого, хуже отсутствия пресета`,
     );
   }
 }

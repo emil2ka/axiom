@@ -111,6 +111,15 @@ export interface Program {
   tuitionPerYearUsd: number;
   livingPerYearUsd: number;
   scholarship: ScholarshipLevel;
+  /**
+   * Сколько денег в год стипендия реально даёт на проживание.
+   * «Полная» стипендия почти всегда означает освобождение от платы за обучение,
+   * а не покрытие жизни: Aalto и Tampere прямо пишут «tuition fee waiver», а
+   * Stipendium Hungaricum — что выплаты «are only a contribution to the living
+   * expenses». Без этого поля движок считал, что при полной стипендии исчезает
+   * 85% всех расходов, и занижал реальную стоимость втрое.
+   */
+  scholarshipLivingSupportUsd: number;
   scholarshipNote: string;
   deadlines: ProgramDeadline[];
   summary: string;
