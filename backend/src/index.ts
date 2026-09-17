@@ -6,10 +6,12 @@ import {
   PROGRAMS,
   applyWhatIf,
   buildRoadmap,
+  detectConflicts,
   diagnose,
   extractFacts,
   mergeFacts,
   recommend,
+  selectNextQuestion,
   type MemoryFact,
 } from "./shared/engine/index";
 
@@ -70,6 +72,14 @@ const schemas = {
     .strict(),
   roadmap: z.object({ memories: memoriesSchema, programId: z.string().min(1).max(80).optional() }).strict(),
   diagnose: z.object({ memories: memoriesSchema }).strict(),
+  interviewNext: z
+    .object({
+      memories: memoriesSchema,
+      askedIds: z.array(z.string().min(1).max(80)).max(50).default([]),
+      resolvedConflictIds: z.array(z.string().min(1).max(80)).max(20).default([]),
+    })
+    .strict(),
+  conflicts: z.object({ memories: memoriesSchema }).strict(),
 };
 
 const app = express();
@@ -182,6 +192,32 @@ app.post(
     const compact = memories.map((item) => ({ field: item.field, value: item.display }));
     const llmSummary = await llmDiagnosisSummary(JSON.stringify(compact));
     res.json({ ...base, summary: llmSummary ?? base.summary, engine: llmSummary ? "llm" : "rules" });
+  }),
+);
+
+app.post(
+  "/interview/next",
+  wrap(async (req, res) => {
+    const parsed = schemas.interviewNext.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "invalid_body", details: parsed.error.flatten() });
+      return;
+    }
+    const { memories, askedIds, resolvedConflictIds } = parsed.data;
+    const turn = selectNextQuestion(toMemories(memories), askedIds, { resolvedConflictIds });
+    res.json(turn);
+  }),
+);
+
+app.post(
+  "/conflicts",
+  wrap(async (req, res) => {
+    const parsed = schemas.conflicts.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "invalid_body", details: parsed.error.flatten() });
+      return;
+    }
+    res.json({ conflicts: detectConflicts(toMemories(parsed.data.memories)) });
   }),
 );
 

@@ -1,14 +1,19 @@
 import {
   DEFAULT_WEIGHTS,
+  INTERVIEW_QUESTIONS,
   PROGRAMS,
   WHATIF_PRESETS,
   applyPriorityWeights,
   applyWhatIf,
   buildRoadmap,
+  detectConflicts,
   diagnose,
+  estimateImpact,
   extractFacts,
   mergeFacts,
+  nextQuestion,
   recommend,
+  selectNextQuestion,
   type MemoryFact,
 } from "./shared/engine/index";
 
@@ -194,6 +199,86 @@ check(
   "приоритет «рейтинг» честно не меняет веса (нет данных в датасете)",
   JSON.stringify(applyPriorityWeights(DEFAULT_WEIGHTS, "ranking")) ===
     JSON.stringify(applyPriorityWeights(DEFAULT_WEIGHTS, null)),
+);
+
+console.log("\n[9] Адаптивное интервью");
+const emptyTurn = selectNextQuestion([], [], { now });
+check("с пустой памятью начинаем со знакомства", emptyTurn.kind === "opener", emptyTurn.kind);
+
+const afterIntro = extractFacts("Меня зовут Алия, 11 класс", { now });
+const gapTurn = selectNextQuestion(afterIntro, ["intro"], { now });
+check("дальше идёт вопрос по пробелу", gapTurn.kind === "gap", gapTurn.kind);
+check("вопрос выбран не по порядку, а по пользе", gapTurn.expectedImpact > 0, String(gapTurn.expectedImpact));
+check("решение объяснено текстом", gapTurn.reason.length > 20, gapTurn.reason);
+
+// Порядок вопросов зависит от памяти, а не от позиции в массиве.
+const knowsCountry = mergeFacts(afterIntro, extractFacts("Хочу в Германию", { now }));
+const knowsInterests = mergeFacts(afterIntro, extractFacts("Интересуюсь дизайном", { now }));
+check(
+  "разная память → разный следующий вопрос",
+  selectNextQuestion(knowsCountry, ["intro"], { now }).question?.id !==
+    selectNextQuestion(knowsInterests, ["intro"], { now }).question?.id,
+  `${selectNextQuestion(knowsCountry, ["intro"], { now }).question?.id} vs ${selectNextQuestion(knowsInterests, ["intro"], { now }).question?.id}`,
+);
+check(
+  "уже известное поле повторно не спрашивается",
+  selectNextQuestion(knowsCountry, ["intro"], { now }).question?.id !== "country",
+);
+
+// Польза измеряется в перестановке топ-5, а не назначается вручную.
+check(
+  "страна влияет на выдачу сильнее, чем GPA",
+  estimateImpact(afterIntro, "country") > estimateImpact(afterIntro, "gpa"),
+  `country=${estimateImpact(afterIntro, "country").toFixed(3)} gpa=${estimateImpact(afterIntro, "gpa").toFixed(3)}`,
+);
+check("GPA честно оценён как не влияющий на рейтинг", estimateImpact(afterIntro, "gpa") === 0);
+check(
+  "польза всегда в диапазоне 0..1",
+  (["country", "budget", "ielts", "interests", "priority", "gpa"] as const).every((field) => {
+    const impact = estimateImpact(afterIntro, field);
+    return impact >= 0 && impact <= 1;
+  }),
+);
+
+console.log("\n[10] Противоречия в памяти");
+const nlCheap = mergeFacts(
+  extractFacts("Хочу в Нидерланды, интересует IT", { now }),
+  extractFacts("Бюджет до $9k в год", { now }),
+);
+const nlConflicts = detectConflicts(nlCheap, PROGRAMS, now);
+check("бюджет против страны найден", nlConflicts.some((item) => item.id === "budget-vs-country"), nlConflicts.map((item) => item.id).join(", "));
+check(
+  "в тексте противоречия есть конкретная цифра из датасета",
+  nlConflicts.find((item) => item.id === "budget-vs-country")?.text.includes("22 800") === true,
+  nlConflicts.find((item) => item.id === "budget-vs-country")?.text,
+);
+const conflictTurn = selectNextQuestion(nlCheap, [], { now });
+check("противоречие спрашивается раньше пробелов", conflictTurn.kind === "conflict", conflictTurn.kind);
+check("вопрос по противоречию предлагает варианты", (conflictTurn.question?.quickReplies.length ?? 0) >= 2);
+check(
+  "проговорённое противоречие больше не всплывает",
+  selectNextQuestion(nlCheap, [], { now, resolvedConflictIds: ["budget-vs-country"] }).kind !== "conflict",
+);
+
+const germanOnly = mergeFacts(
+  extractFacts("Хочу в Германию, интересует IT", { now }),
+  extractFacts("Не хочу учить новый язык", { now }),
+);
+check(
+  "языковое ограничение против страны найдено",
+  detectConflicts(germanOnly, PROGRAMS, now).some((item) => item.id === "language-vs-country"),
+  detectConflicts(germanOnly, PROGRAMS, now).map((item) => item.id).join(", "),
+);
+const pastIntake = extractFacts("Планирую поступление в 2020 году", { now });
+check(
+  "старт в прошлом распознан как противоречие",
+  detectConflicts(pastIntake, PROGRAMS, now).some((item) => item.id === "intake-in-past"),
+);
+check("непротиворечивый профиль не выдумывает конфликтов", detectConflicts(facts, PROGRAMS, now).length === 0, detectConflicts(facts, PROGRAMS, now).map((item) => item.id).join(", "));
+
+check(
+  "старый вызов nextQuestion(ids) не сломан",
+  nextQuestion([]) === INTERVIEW_QUESTIONS[0] && nextQuestion(["intro"])?.id === "country",
 );
 
 console.log(`\nИтог: ${passed} ok, ${failed} fail\n`);

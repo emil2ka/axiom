@@ -71,6 +71,7 @@ export function ChatInterview({ onOpenManual }: { onOpenManual: () => void }) {
   const hydrated = useHydrated();
   const messages = useAxiomStore((state) => state.messages);
   const answered = useAxiomStore((state) => state.answeredQuestionIds);
+  const memories = useAxiomStore((state) => state.memories);
   const addMessage = useAxiomStore((state) => state.addMessage);
   const addFacts = useAxiomStore((state) => state.addFacts);
   const markAnswered = useAxiomStore((state) => state.markAnswered);
@@ -87,7 +88,9 @@ export function ChatInterview({ onOpenManual }: { onOpenManual: () => void }) {
     setDraft((current) => (current ? `${current} ${text}` : text));
   });
 
-  const question = nextQuestion(answered);
+  // Память передаётся в движок — вопрос выбирается по пробелам и противоречиям,
+  // а не по позиции в массиве.
+  const question = nextQuestion(answered, memories);
   const answeredCount = INTERVIEW_QUESTIONS.filter((item) => answered.includes(item.id)).length;
   const progress = (answeredCount / INTERVIEW_QUESTIONS.length) * 100;
 
@@ -125,14 +128,15 @@ export function ChatInterview({ onOpenManual }: { onOpenManual: () => void }) {
     setDraft("");
     setTyping(true);
 
-    const currentQuestion = nextQuestion(useAxiomStore.getState().answeredQuestionIds);
+    const stateBefore = useAxiomStore.getState();
+    const currentQuestion = nextQuestion(stateBefore.answeredQuestionIds, stateBefore.memories);
 
     try {
       const { facts } = await extractFactsSmart(text, source);
       addFacts(facts);
       if (currentQuestion) markAnswered(currentQuestion.id);
-      const answeredIds = useAxiomStore.getState().answeredQuestionIds;
-      const next = nextQuestion(answeredIds);
+      const stateAfter = useAxiomStore.getState();
+      const next = nextQuestion(stateAfter.answeredQuestionIds, stateAfter.memories);
       await new Promise((resolve) => setTimeout(resolve, 600));
       addMessage({ id: uid(), role: "axiom", text: composeAgentReply(facts, next), ts: Date.now() });
     } catch {

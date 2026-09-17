@@ -177,4 +177,38 @@ export interface InterviewQuestion {
   placeholder: string;
   quickReplies: string[];
   core: boolean;
+  /** Какие поля памяти закрывает ответ на этот вопрос. */
+  fields?: MemoryField[];
+  /** Вопрос-знакомство: задаётся первым независимо от расчёта пользы. */
+  opener?: boolean;
+}
+
+/** Противоречие между фактами памяти, найденное на реальных данных программ. */
+export interface MemoryConflict {
+  id: string;
+  fields: MemoryField[];
+  /** Что именно AXIOM заметил — показывается пользователю. */
+  text: string;
+  /** Уточняющий вопрос, который снимает противоречие. */
+  question: string;
+  quickReplies: string[];
+  severity: "high" | "medium";
+}
+
+export interface InterviewProgress {
+  answered: number;
+  total: number;
+  completeness: number;
+}
+
+/** Решение адаптивного интервью: что спросить дальше и почему именно это. */
+export interface InterviewTurn {
+  question: InterviewQuestion | null;
+  kind: "opener" | "conflict" | "gap" | "done";
+  /** Объяснение выбора для интерфейса и для жюри. */
+  reason: string;
+  /** Насколько ответ способен изменить топ-5 рекомендаций: 0..1. */
+  expectedImpact: number;
+  conflicts: MemoryConflict[];
+  progress: InterviewProgress;
 }
