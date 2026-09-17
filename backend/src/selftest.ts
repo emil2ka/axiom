@@ -584,5 +584,55 @@ for (const [field, probe] of Object.entries(probeValues)) {
   );
 }
 
+console.log("\n[16] Намерение: дополнить или заменить");
+
+const intentOf = (text: string, field: string): string | undefined =>
+  extractFacts(text, { now }).find((item) => item.field === field)?.intent;
+const valueOf = (text: string, field: string): string | undefined =>
+  extractFacts(text, { now }).find((item) => item.field === field)?.display;
+
+// Дополнение — поведение по умолчанию, оно не должно было измениться.
+for (const phrase of ["Хочу в Европу, интересует IT", "Рассматриваю Германию и Польшу", "Интересует IT и дизайн"]) {
+  check(`«${phrase}» → дополняет память`, intentOf(phrase, "country") !== "replace" && intentOf(phrase, "interests") !== "replace");
+}
+check("«не только IT, но и дизайн» — перечисление, а не замена", intentOf("Не только IT, но и дизайн", "interests") !== "replace");
+const bothInterests = valueOf("Не только IT, но и дизайн", "interests") ?? "";
+check("и оба направления сохранены", bothInterests.includes("IT") && bothInterests.includes("Дизайн"), bothInterests);
+
+// Замена — человек передумал.
+for (const [phrase, field] of [
+  ["Хочу только Германию", "country"],
+  ["Теперь интересует дизайн", "interests"],
+  ["Передумал, интересует медицина", "interests"],
+  ["Вместо Европы рассматриваю Турцию", "country"],
+] as const) {
+  check(`«${phrase}» → заменяет прежнее`, intentOf(phrase, field) === "replace", intentOf(phrase, field) ?? "add");
+}
+
+// Отрицание конкретного значения.
+check("«Не рассматриваю Германию» → Германия не попадает в память", valueOf("Не рассматриваю Германию", "country") === undefined, valueOf("Не рассматриваю Германию", "country"));
+check("«Хочу в Европу, а не в США» → остаётся только Европа", valueOf("Хочу в Европу, а не в США", "country") === "Европа", valueOf("Хочу в Европу, а не в США", "country"));
+check("«всё кроме медицины» → медицина исключена", valueOf("Интересует всё кроме медицины", "interests") === undefined);
+check(
+  "«вместо Европы рассматриваю Турцию» → Турция сохранена, Европа нет",
+  valueOf("Вместо Европы рассматриваю Турцию", "country") === "Турция",
+  valueOf("Вместо Европы рассматриваю Турцию", "country"),
+);
+check("«но не хочу учить язык» не отменяет страну", valueOf("Хочу в Европу, но не хочу учить язык", "country") === "Европа");
+
+// Слияние уважает намерение.
+let dialog = extractFacts("Хочу в Европу, интересует IT", { now });
+dialog = mergeFacts(dialog, extractFacts("Ещё рассматриваю Финляндию", { now }));
+check("дополнение расширяет список стран", dialog.find((item) => item.field === "country")?.value === "Европа; Финляндия", dialog.find((item) => item.field === "country")?.value);
+dialog = mergeFacts(dialog, extractFacts("Хочу только Германию, а не всю Европу", { now }));
+check("замена схлопывает список до сказанного", dialog.find((item) => item.field === "country")?.value === "Германия", dialog.find((item) => item.field === "country")?.value);
+dialog = mergeFacts(dialog, extractFacts("На самом деле меня больше интересует дизайн", { now }));
+check("смена направления заменяет, а не накапливает", dialog.find((item) => item.field === "interests")?.value === "Дизайн", dialog.find((item) => item.field === "interests")?.value);
+check("прежнее значение при замене ушло в историю", (dialog.find((item) => item.field === "interests")?.history?.length ?? 0) >= 1);
+
+// Поля, которые и так заменялись, не должны сломаться.
+check("бюджет по-прежнему заменяется", mergeFacts(extractFacts("Бюджет до $15k", { now }), extractFacts("Теперь бюджет до $20k", { now })).find((item) => item.field === "budget")?.numeric === 20000);
+check("«только сдал IELTS 6.5» не ломает извлечение балла", extractFacts("Только сдал IELTS 6.5", { now }).find((item) => item.field === "ielts")?.numeric === 6.5);
+
 console.log(`\nИтог: ${passed} ok, ${failed} fail\n`);
 if (failed > 0) process.exit(1);

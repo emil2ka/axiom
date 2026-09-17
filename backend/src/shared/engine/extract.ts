@@ -386,6 +386,45 @@ function findConstraints(text: string): { value: string; quote: string; index: n
   return results.sort((a, b) => a.index - b.index);
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// Намерение: дополнить или заменить
+//
+// Разговор — это в том числе способ передумать. «Ещё рассматриваю Финляндию»
+// дополняет память, а «хочу только Германию, а не всю Европу» заменяет её.
+// Без этого различия сервис копил противоположное сказанному: три уточнения
+// подряд превращались в «Европа; Германия; Польша».
+// ────────────────────────────────────────────────────────────────────────────
+
+/** Слова, после которых прежнее значение поля больше не действует. */
+const REPLACE_MARKERS = /только|теперь|передума\w*|на самом деле|больше не|уже не|вместо|исключительно|определилс\w*|решил\w*\s+(?:всё\s+же\s+)?(?:в|на|поехать)/i;
+
+/**
+ * Отрицание конкретного значения: «а не в США», «не рассматриваю Германию»,
+ * «кроме медицины». Между отрицанием и значением допускается только предлог и
+ * один глагол из списка — любое слово растягивало отрицание на соседнее
+ * значение, и «вместо Европы рассматриваю Турцию» теряло Турцию.
+ */
+const EXCLUDE_MARKERS =
+  /(?:^|[\s,])(?:а\s+не|но\s+не|кроме|вместо|не)\s+(?:(?:рассматриваю|хочу|планирую|поеду|еду|буду|готов\w*|интересует|нравит\w*)\s+)?(?:(?:в|во|на|из|со|с|по)\s+)?(?:вс[ею]\w*\s+)?$/i;
+
+/** «не только IT» — это включение, а не исключение и не замена. */
+const INCLUSIVE_NOT = /не\s+только/i;
+
+function isExcluded(text: string, index: number): boolean {
+  const before = text.slice(Math.max(0, index - 28), index);
+  if (INCLUSIVE_NOT.test(before)) return false;
+  return EXCLUDE_MARKERS.test(before);
+}
+
+function hasReplaceIntent(text: string, index: number): boolean {
+  // Смотрим на фразу вокруг значения, а не на всю реплику: «только» в одной
+  // части предложения не должно перечёркивать поле из другой части.
+  const window = text.slice(Math.max(0, index - 45), Math.min(text.length, index + 25));
+  // «не только IT, но и дизайн» — перечисление, а не отказ от прежнего.
+  if (INCLUSIVE_NOT.test(window)) return false;
+  return REPLACE_MARKERS.test(window);
+}
+
 function clipQuote(text: string, index: number, length: number, max = 140): string {
   const before = Math.max(0, index - 24);
   const after = Math.min(text.length, index + length + 24);
@@ -463,10 +502,13 @@ export function extractFacts(text: string, options: ExtractOptions = {}): Memory
     add("constraints", constraint.value, constraint.value, constraint.quote, 0.7, constraint.index);
   }
 
-  return assembleFacts(candidates, source).map((item) => ({ ...item, id: makeId(item.field) }));
+  // Значение, названное с отрицанием («а не всю Европу»), в память не попадает.
+  const kept = candidates.filter((candidate) => !isExcluded(text, candidate.index));
+
+  return assembleFacts(kept, source, text).map((item) => ({ ...item, id: makeId(item.field) }));
 }
 
-function assembleFacts(candidates: Candidate[], source: MemorySource): Omit<MemoryFact, "id">[] {
+function assembleFacts(candidates: Candidate[], source: MemorySource, text = ""): Omit<MemoryFact, "id">[] {
   const multiFields = new Set<MemoryField>(["country", "interests", "language", "constraints"]);
   const grouped = new Map<MemoryField, Candidate[]>();
 
@@ -496,6 +538,7 @@ function assembleFacts(candidates: Candidate[], source: MemorySource): Omit<Memo
         confidence: Math.max(...unique.map((item) => item.confidence)),
         source,
         createdAt: Date.now(),
+        intent: unique.some((item) => hasReplaceIntent(text, item.index)) ? "replace" : "add",
         order: first.index,
       });
     } else {
@@ -569,7 +612,7 @@ export function mergeFactsWithDiff(existing: MemoryFact[], incoming: MemoryFact[
 
     const previous = result[index];
 
-    if (mergeable.has(fresh.field)) {
+    if (mergeable.has(fresh.field) && fresh.intent !== "replace") {
       const known = splitValues(previous.value);
       const added = splitValues(fresh.value).filter((value) => !known.includes(value));
       if (!added.length) {

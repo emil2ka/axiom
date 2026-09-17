@@ -38,6 +38,12 @@ export interface MemoryFact {
   createdAt: number;
   /** Предыдущие значения, свежие первыми. Пусто, пока факт не меняли. */
   history?: MemoryRevision[];
+  /**
+   * Что человек имел в виду: дополнить прежнее значение или заменить его.
+   * «Ещё рассматриваю Финляндию» — add, «хочу только Германию» — replace.
+   * Без флага считается add, поэтому старые вызовы ведут себя как раньше.
+   */
+  intent?: "add" | "replace";
 }
 
 export type MemoryChangeKind = "added" | "updated" | "extended" | "unchanged";

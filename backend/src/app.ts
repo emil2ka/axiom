@@ -58,6 +58,7 @@ const memorySchema = z.object({
   source: z.enum(["voice", "text", "manual", "demo"]),
   createdAt: z.number(),
   history: z.array(revisionSchema).max(20).optional(),
+  intent: z.enum(["add", "replace"]).optional(),
 });
 
 const memoriesSchema = z.array(memorySchema).max(100);
