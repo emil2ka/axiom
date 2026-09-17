@@ -8,17 +8,23 @@
  * числом, а не на глаз.
  */
 import {
+  DEFAULT_WEIGHTS,
   PROGRAMS,
   buildRoadmap,
   extractFacts,
   getConstraints,
   getInterestTags,
   getLanguageNames,
+  buildContext,
+  normalizeWeights,
+  rankingChurn,
   recommend,
+  scoreProgram,
   totalPerYear,
   type MemoryFact,
   type Program,
   type Recommendation,
+  type ScoreWeights,
 } from "./shared/engine/index";
 
 const NOW = new Date("2026-09-17T12:00:00Z");
@@ -272,6 +278,50 @@ function main(): void {
     );
   }
 
+  // ── Устойчивость ────────────────────────────────────────────────────────
+  // Вопрос «почему именно такие веса» имеет смысл только если выдача к ним
+  // чувствительна. Измеряем: если ±20% по любому критерию рейтинг не рушат,
+  // значит он держится на данных, а не на подогнанных числах.
+  const weightKeys = Object.keys(DEFAULT_WEIGHTS) as (keyof ScoreWeights)[];
+  const sensitivities: number[] = [];
+  for (const profile of PROFILES) {
+    const memories = memoriesOf(profile);
+    const baseline = recommend(memories).recommendations;
+    for (const key of weightKeys) {
+      for (const factor of [0.8, 1.2]) {
+        const weights = normalizeWeights({ ...DEFAULT_WEIGHTS, [key]: DEFAULT_WEIGHTS[key] * factor });
+        sensitivities.push(rankingChurn(baseline, recommend(memories, { weights }).recommendations));
+      }
+    }
+  }
+  const avgSensitivity = sensitivities.reduce((acc, value) => acc + value, 0) / sensitivities.length;
+  const maxSensitivity = Math.max(...sensitivities);
+
+  // Малое изменение профиля не должно перетряхивать выдачу.
+  const perturbations: [string, string, string][] = [
+    ["бюджет $15 000 → $15 100", "Хочу в Европу, бюджет до $15k, IELTS 6.0, интересует IT", "Хочу в Европу, бюджет до $15100, IELTS 6.0, интересует IT"],
+    ["IELTS 6.0 → 6.1", "Хочу в Европу, бюджет до $15k, IELTS 6.0, интересует IT", "Хочу в Европу, бюджет до $15k, IELTS 6.1, интересует IT"],
+    ["средний балл 4.5 → 4.6", "Хочу в Европу, бюджет до $15k, интересует IT, средний балл 4.5", "Хочу в Европу, бюджет до $15k, интересует IT, средний балл 4.6"],
+  ];
+  const drifts = perturbations.map(([label, before, after]) => ({
+    label,
+    churn: rankingChurn(
+      recommend(extractFacts(before, { now: NOW })).recommendations,
+      recommend(extractFacts(after, { now: NOW })).recommendations,
+    ),
+  }));
+
+  // Плавность: оценка не должна обрываться на границах диапазонов.
+  const probe = { ...PROGRAMS[0], tuitionPerYearUsd: 10000, livingPerYearUsd: 0, scholarship: "partial" as const, durationYears: 3 };
+  let maxJump = 0;
+  let previous: number | null = null;
+  for (let budget = 12000; budget >= 6000; budget -= 100) {
+    const ctx = buildContext(extractFacts(`Хочу в Европу, бюджет до $${budget}, интересует IT`, { now: NOW }));
+    const value = scoreProgram(probe, ctx).score;
+    if (previous !== null) maxJump = Math.max(maxJump, Math.abs(value - previous));
+    previous = value;
+  }
+
   const score = Math.round((met / total) * 100);
   const avgPrecision = precisions.length
     ? Math.round((precisions.reduce((acc, value) => acc + value, 0) / precisions.length) * 100)
@@ -281,6 +331,12 @@ function main(): void {
   console.log(`\nОжиданий выполнено:        ${met}/${total} (${score}%)`);
   console.log(`Точность направления в топ-5: ${avgPrecision}% (доля программ по заявленному интересу)`);
   console.log(`Маршрут построен:          ${PROFILES.length - emptyRoadmaps.length}/${PROFILES.length}`);
+  console.log(`\nУстойчивость рейтинга:`);
+  console.log(`  к весам (±20% на критерий):  расхождение топ-5 ${Math.round(avgSensitivity * 100)}% в среднем, ${Math.round(maxSensitivity * 100)}% максимум`);
+  for (const drift of drifts) {
+    console.log(`  ${drift.label.padEnd(28)} ${Math.round(drift.churn * 100)}%`);
+  }
+  console.log(`  максимальный скачок оценки при плавном изменении бюджета: ${maxJump} балла`);
 
   if (failures.length) {
     console.log("\nНе выполнено:");
@@ -290,7 +346,16 @@ function main(): void {
     console.log(`\nПустой или короткий маршрут: ${emptyRoadmaps.join(", ")}`);
   }
 
-  const ok = score >= PASS_THRESHOLD && emptyRoadmaps.length === 0;
+  // Пороги: выдача не должна разваливаться от разумной правки весов и не должна
+  // скакать от мелочи. Обе границы выбраны с запасом к измеренным значениям.
+  const stable = avgSensitivity <= 0.2 && maxSensitivity <= 0.4;
+  const calm = drifts.every((drift) => drift.churn <= 0.1);
+  const smooth = maxJump <= 3;
+  if (!stable) console.log("\n  ВНИМАНИЕ: рейтинг слишком чувствителен к весам — они подогнаны, а не обоснованы");
+  if (!calm) console.log("\n  ВНИМАНИЕ: мелкое изменение профиля перетряхивает выдачу");
+  if (!smooth) console.log(`\n  ВНИМАНИЕ: оценка обрывается на ${maxJump} балла — где-то осталась ступенька`);
+
+  const ok = score >= PASS_THRESHOLD && emptyRoadmaps.length === 0 && stable && calm && smooth;
   console.log(`\n${ok ? "Порог пройден" : "НИЖЕ ПОРОГА"}: ${score}% при минимуме ${PASS_THRESHOLD}%\n`);
   if (!ok) process.exit(1);
 }

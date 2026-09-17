@@ -240,16 +240,14 @@ function scoreComponents(program: Program, ctx: ScoreContext): ScoredParts {
     // Но при полной стипендии лишний год семье ничего не стоит, поэтому штрафа нет.
     const durationPenalty =
       program.scholarship === "full" ? 1 : 1 - 0.05 * Math.max(0, program.durationYears - 3);
+    // За пределами бюджета оценка затухает плавно, а не ступенями. На ступенях
+    // две почти одинаковые программы, отличающиеся на $200, оказывались по
+    // разные стороны порога и получали 82 и 76 — разница, которой не за что
+    // зацепиться, но которую видно в интерфейсе.
     budgetComponent =
       ratio <= 1
         ? (1 - 0.15 * ratio) * durationPenalty
-        : ratio <= 1.15
-          ? 0.75
-          : ratio <= 1.3
-            ? 0.45
-            : ratio <= 1.5
-              ? 0.2
-              : 0.05;
+        : Math.max(0.05, 0.85 * Math.exp(-2.4 * (ratio - 1)) * durationPenalty);
     if (program.scholarship === "full") {
       reasons.push({
         text: `Стипендия покрывает обучение и проживание — стоимость почти не расходует бюджет`,
