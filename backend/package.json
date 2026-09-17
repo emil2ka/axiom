@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts",
+    "build:api": "esbuild src/serverless.ts --bundle --platform=node --target=node20 --format=cjs --outfile=api/index.js",
     "typecheck": "tsc --noEmit",
     "selftest": "tsx src/selftest.ts",
     "e2e": "tsx src/e2e.ts",
