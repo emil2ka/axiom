@@ -891,5 +891,51 @@ check(
   "иначе отдельная строка полной стоимости была бы не нужна",
 );
 
+console.log("\n[23] Маршрут знает, какое сегодня число");
+
+const today = new Date("2026-09-17T12:00:00Z");
+const applicant = extractFacts("Хочу в Европу, интересует IT, IELTS 5.5, средний балл 3.8, бюджет до $20k", { now: today });
+
+// Дедлайн в январе: обычный график подготовки начинается раньше, чем сегодня.
+const soon = buildRoadmap(applicant, PROGRAMS.find((program) => program.id === "tudelft-eng") ?? null, { now: today });
+check("шаги с прошедшими сроками помечены", soon.steps.some((step) => step.overdue));
+check(
+  "и не показывают дату из прошлого",
+  soon.steps.filter((step) => step.overdue).every((step) => step.dueMonth === "Как можно скорее"),
+  soon.steps.filter((step) => step.overdue).map((step) => step.dueMonth).join(", "),
+);
+check(
+  "ни один срок не указывает в прошлое",
+  soon.steps.every((step) => {
+    const match = /(20\d\d)/.exec(step.dueMonth);
+    return !match || Number(match[1]) >= today.getUTCFullYear();
+  }),
+  soon.steps.map((step) => step.dueMonth).join(" | "),
+);
+check("темп распознан как срочный", soon.pace === "urgent", soon.pace);
+check("до дедлайна посчитаны месяцы", soon.monthsToDeadline === 4, String(soon.monthsToDeadline));
+check("оценка запаса времени объяснена словами", soon.paceNote.length > 40, soon.paceNote);
+
+// Дедлайн в июле: времени достаточно, ничего не просрочено.
+const roomy = buildRoadmap(applicant, PROGRAMS.find((program) => program.id === "pw-cs") ?? null, { now: today });
+check("при дальнем дедлайне просроченных шагов нет", roomy.steps.every((step) => !step.overdue));
+check("темп распознан как спокойный", roomy.pace === "comfortable", roomy.pace);
+check("маршруты с разным запасом времени объясняются по-разному", roomy.paceNote !== soon.paceNote);
+
+// Набор прошёл целиком — маршрут переезжает на следующий, а не показывает прошлое.
+const nextIntake = buildRoadmap(applicant, PROGRAMS.find((program) => program.id === "pw-cs") ?? null, {
+  now: new Date("2028-03-01T12:00:00Z"),
+});
+check(
+  "после прошедшего набора маршрут переезжает на следующий",
+  nextIntake.steps.find((step) => step.id.endsWith("-apply"))?.dueMonth.includes("2028") === true,
+  nextIntake.steps.find((step) => step.id.endsWith("-apply"))?.dueMonth,
+);
+
+// Без цели маршрут не притворяется, что что-то построил.
+const noTarget = buildRoadmap([], null, { now: today, programs: [] });
+check("без цели маршрут пуст", noTarget.steps.length === 0 && noTarget.targetProgram === null);
+check("и честно говорит почему", noTarget.paceNote.includes("Цель ещё не выбрана"), noTarget.paceNote);
+
 console.log(`\nИтог: ${passed} ok, ${failed} fail\n`);
 if (failed > 0) process.exit(1);

@@ -1,5 +1,5 @@
-import type { MemoryFact, Program, Roadmap, RoadmapStep } from "../types";
-import { shiftMonths, shiftMonthsIso } from "./format";
+import type { MemoryFact, Program, Roadmap, RoadmapPace, RoadmapStep } from "../types";
+import { parseIso, pluralRu, shiftMonths, shiftMonthsIso } from "./format";
 import { getGpaPercent, getIntakeYear, getInterestTags, getIelts, getLanguageNames } from "./profile";
 import { PROGRAMS, recommend } from "./recommend";
 
@@ -54,9 +54,29 @@ const ACTIVITY_BY_TAG: Record<string, { title: string; description: string }> = 
   },
 };
 
-export function buildRoadmap(memories: MemoryFact[], program: Program | null, programs: Program[] = PROGRAMS): Roadmap {
+export interface RoadmapOptions {
+  programs?: Program[];
+  /** Сегодняшняя дата: без неё маршрут не знает, какие сроки уже прошли. */
+  now?: Date;
+}
+
+export function buildRoadmap(
+  memories: MemoryFact[],
+  program: Program | null,
+  options: RoadmapOptions = {},
+): Roadmap {
+  const programs = options.programs ?? PROGRAMS;
+  const now = options.now ?? new Date();
   const target = program ?? recommend(memories, { programs }).recommendations[0]?.program ?? null;
-  if (!target) return { targetProgram: null, steps: [] };
+  if (!target) {
+    return {
+      targetProgram: null,
+      steps: [],
+      monthsToDeadline: null,
+      pace: "comfortable",
+      paceNote: "Цель ещё не выбрана — выбери программу, и я построю маршрут под её дедлайны.",
+    };
+  }
 
   const ielts = getIelts(memories);
   const languages = getLanguageNames(memories);
@@ -67,7 +87,15 @@ export function buildRoadmap(memories: MemoryFact[], program: Program | null, pr
   // иначе тому, кто поступает в 2028, выдавался план под набор 2027.
   const intakeYear = getIntakeYear(memories);
   const deadlineYear = Number(rawDeadlineIso.slice(0, 4));
-  const yearShift = intakeYear && intakeYear > deadlineYear ? intakeYear - deadlineYear : 0;
+  // Дедлайны в датасете указаны для набора 2027. Когда он пройдёт, маршрут
+  // должен переехать на следующий набор сам, а не показывать прошлые даты.
+  const rawDeadlineDate = parseIso(rawDeadlineIso);
+  const yearsPassed =
+    rawDeadlineDate && rawDeadlineDate.getTime() < now.getTime()
+      ? now.getUTCFullYear() - deadlineYear + (now.getUTCMonth() > rawDeadlineDate.getUTCMonth() ? 1 : 0)
+      : 0;
+  const intakeShift = intakeYear && intakeYear > deadlineYear ? intakeYear - deadlineYear : 0;
+  const yearShift = Math.max(intakeShift, yearsPassed);
   const deadlineIso = yearShift
     ? `${deadlineYear + yearShift}${rawDeadlineIso.slice(4)}`
     : rawDeadlineIso;
@@ -80,8 +108,15 @@ export function buildRoadmap(memories: MemoryFact[], program: Program | null, pr
   const sourceLabel = target.sources[0]?.label ?? "источник вуза";
   const drafts: DraftStep[] = [];
 
-  const push = (step: Omit<DraftStep, "dueMonth">) => {
-    drafts.push({ ...step, dueMonth: shiftMonths(step.dueIso, 0) });
+  const push = (step: Omit<DraftStep, "dueMonth" | "overdue">) => {
+    const overdue = (parseIso(step.dueIso)?.getTime() ?? Infinity) < now.getTime();
+    drafts.push({
+      ...step,
+      overdue,
+      // Прошедший срок нельзя показывать как план: человек прочтёт «июль 2026»
+      // в сентябре 2026 и решит, что сервис не понимает, какой сейчас месяц.
+      dueMonth: overdue ? "Как можно скорее" : shiftMonths(step.dueIso, 0),
+    });
   };
 
   if (ielts === null) {
@@ -275,5 +310,51 @@ export function buildRoadmap(memories: MemoryFact[], program: Program | null, pr
 
   const sorted = drafts.sort((a, b) => a.dueIso.localeCompare(b.dueIso));
   const steps: RoadmapStep[] = sorted.map(({ dueIso: _dueIso, ...step }) => step);
-  return { targetProgram: target, steps };
+
+  const deadlineDate = parseIso(deadlineIso);
+  const monthsToDeadline = deadlineDate
+    ? Math.max(
+        0,
+        Math.round((deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 30.44)),
+      )
+    : null;
+  const overdueCount = steps.filter((step) => step.overdue).length;
+  const { pace, paceNote } = describePace(monthsToDeadline, overdueCount, target);
+
+  return { targetProgram: target, steps, monthsToDeadline, pace, paceNote };
+}
+
+/**
+ * Честная оценка запаса времени. Полный маршрут рассчитан примерно на восемь
+ * месяцев подготовки; если до подачи меньше, человек должен узнать это сразу,
+ * а не обнаружить в списке шаги с прошедшими сроками.
+ */
+function describePace(
+  monthsLeft: number | null,
+  overdueCount: number,
+  target: Program,
+): { pace: RoadmapPace; paceNote: string } {
+  if (monthsLeft === null) {
+    return { pace: "comfortable", paceNote: "Дедлайн программы уточняется — ориентируйся на сайт вуза." };
+  }
+  const tail = overdueCount
+    ? ` ${overdueCount} ${pluralRu(overdueCount, "шаг отмечен", "шага отмечены", "шагов отмечены")} как «как можно скорее» — их сроки по обычному графику уже прошли.`
+    : "";
+
+  if (monthsLeft >= 9) {
+    return {
+      pace: "comfortable",
+      paceNote: `До подачи в ${target.university} ещё ${monthsLeft} ${pluralRu(monthsLeft, "месяц", "месяца", "месяцев")} — времени на подготовку достаточно.${tail}`,
+    };
+  }
+  if (monthsLeft >= 5) {
+    return {
+      pace: "tight",
+      paceNote: `До подачи ${monthsLeft} ${pluralRu(monthsLeft, "месяц", "месяца", "месяцев")}, а спокойный график требует около восьми. Часть шагов придётся вести параллельно.${tail}`,
+    };
+  }
+  return {
+    pace: "urgent",
+    paceNote: `До подачи ${monthsLeft} ${pluralRu(monthsLeft, "месяц", "месяца", "месяцев")} — это мало. Успеть можно, но документы и экзамен нужно двигать одновременно, а запасной вариант со следующим набором стоит держать в уме.${tail}`,
+  };
 }

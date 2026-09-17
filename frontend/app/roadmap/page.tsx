@@ -170,6 +170,20 @@ export default function RoadmapPage() {
                   <p className="mt-2 text-[12px] text-mist-500">
                     Срок: {nextStep.dueMonth} · {nextStep.sourceNote}
                   </p>
+                  {/* Запас времени до подачи: без этой строки человек не знает,
+                      что дедлайн ближе, чем требует спокойный график. */}
+                  <p
+                    className={cn(
+                      "mt-1.5 text-[12px]",
+                      roadmap.pace === "urgent"
+                        ? "text-rose-300"
+                        : roadmap.pace === "tight"
+                          ? "text-amber-300"
+                          : "text-mist-500",
+                    )}
+                  >
+                    {roadmap.paceNote}
+                  </p>
                 </div>
                 <Button size="lg" onClick={() => toggleRoadmapStep(nextStep.id)}>
                   <IconCheck className="h-4 w-4" />

@@ -38,7 +38,11 @@
 Строит персональный план.
 
 Запрос: `{ "memories": MemoryFact[], "programId"?: string }`
-Ответ: `{ "targetProgram": Program | null, "steps": RoadmapStep[] }`
+Ответ: `{ "targetProgram": Program | null, "steps": RoadmapStep[], "monthsToDeadline": number | null, "pace": "comfortable" | "tight" | "urgent", "paceNote": string }`
+
+Шаги, чей обычный срок подготовки уже прошёл, несут `overdue: true` и
+`dueMonth: "Как можно скорее"` — дата из прошлого в плане недопустима.
+`paceNote` честно оценивает запас времени до подачи.
 
 ## POST /diagnose
 Резюме профиля: сильные стороны, ограничения, цель, полнота.

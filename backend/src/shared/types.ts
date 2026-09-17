@@ -215,11 +215,21 @@ export interface RoadmapStep {
   dueMonth: string;
   why: string;
   sourceNote: string;
+  /** Срок по плану уже прошёл — шаг нужно делать не «когда-нибудь», а сейчас. */
+  overdue: boolean;
 }
+
+/** Хватает ли времени до подачи на нормальную подготовку. */
+export type RoadmapPace = "comfortable" | "tight" | "urgent";
 
 export interface Roadmap {
   targetProgram: Program | null;
   steps: RoadmapStep[];
+  /** Сколько месяцев осталось до ближайшего дедлайна подачи. */
+  monthsToDeadline: number | null;
+  pace: RoadmapPace;
+  /** Честная оценка запаса времени — её видно человеку. */
+  paceNote: string;
 }
 
 export interface Diagnosis {
