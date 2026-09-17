@@ -395,10 +395,19 @@ export function selectNextQuestion(
   });
 
   if (!candidates.length) {
+    // Вопросы кончились — это не то же самое, что «профиль собран». На «не знаю»
+    // факт не появляется, и заявлять обратное значит врать в глаза человеку,
+    // который видит рядом полноту профиля 33%.
+    const missing = CORE_FIELDS.filter((field) => fact(memories, field) === undefined);
     return {
       question: null,
       kind: "done",
-      reason: "Все ключевые факты собраны — профиль готов к диагностике.",
+      reason: missing.length
+        ? `Вопросы закончились, но профиль заполнен на ${progress.completeness}%. Не хватает: ${missing
+            // IELTS — аббревиатура, её нельзя опускать в строчные наравне со словами.
+            .map((field) => (FIELD_LABELS[field] === FIELD_LABELS[field].toUpperCase() ? FIELD_LABELS[field] : FIELD_LABELS[field].toLowerCase()))
+            .join(", ")}. Скажи об этом в любой момент — я пересоберу подбор.`
+        : "Все ключевые факты собраны — профиль готов к диагностике.",
       expectedImpact: 0,
       conflicts,
       progress,
@@ -471,8 +480,34 @@ export function composeAcknowledgment(facts: MemoryFact[]): string {
   return template.replace("{list}", describeFacts(visible)).replace("{tail}", tail);
 }
 
-export function composeAgentReply(facts: MemoryFact[], next: InterviewQuestion | null): string {
-  const acknowledgment = composeAcknowledgment(facts);
+/** «Не знаю», «хз», «пока не решил» — это ответ, и его надо признать. */
+const UNSURE = /не\s*знаю|хз|пока\s+не\s+(?:решил|определ|дума)|не\s+уверен|без\s+понятия|попозже|потом/i;
+
+/**
+ * «Ограничений нет», «всё подходит» — тоже осмысленный ответ, а не пустота.
+ * Окончания перечислены как [а-яё]*: \w в JavaScript не включает кириллицу,
+ * поэтому «ограничен\w*» не покрывает «ограничений».
+ */
+const NOTHING_TO_ADD =
+  /(?:ограничен[а-яё]*|услови[а-яё]*|пожелани[а-яё]*)\s+нет|нет\s+(?:ограничен[а-яё]*|услови[а-яё]*)|вс[её]\s+(?:подход|устраива|норм)|ничего\s+так[а-яё]*|не\s+важно/i;
+
+/**
+ * Реплика, из которой ничего не извлеклось, не должна оставаться без ответа:
+ * иначе AXIOM просто выстреливает следующий вопрос, и человек видит, что его
+ * не услышали — в продукте, который обещает обратное.
+ */
+function composeMiss(userText: string): string {
+  if (NOTHING_TO_ADD.test(userText)) return "Понял — ограничений нет, учту.";
+  if (UNSURE.test(userText)) return "Хорошо, пропустим — вернёмся к этому, когда решишь.";
+  return "Ничего конкретного не уловил в этой фразе — её всегда можно сказать иначе или добавить факт позже.";
+}
+
+export function composeAgentReply(
+  facts: MemoryFact[],
+  next: InterviewQuestion | null,
+  userText = "",
+): string {
+  const acknowledgment = facts.length ? composeAcknowledgment(facts) : userText ? composeMiss(userText) : "";
   if (!next) {
     const outro = "Профиль собран — я сформировал память о тебе. Проверь факты и переходи к диагностике.";
     return acknowledgment ? `${acknowledgment}\n\n${outro}` : outro;

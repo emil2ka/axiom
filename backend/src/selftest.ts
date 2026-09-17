@@ -6,8 +6,11 @@ import {
   WHATIF_PRESETS,
   applyPriorityWeights,
   applyWhatIf,
+  CORE_FIELDS,
   buildContext,
   buildRoadmap,
+  composeAgentReply,
+  fact,
   FIELD_LABELS,
   detectConflicts,
   diagnose,
@@ -989,6 +992,66 @@ check(
   "топ-1 действительно по названному направлению",
   shownTop.program.tags.includes("medicine"),
   `${shownTop.program.id} (${shownTop.program.field})`,
+);
+
+console.log("\n[25] Интервью проходится до конца и не врёт о результате");
+
+// Полный проход, как это сделает жюри: на каждый вопрос — человеческий ответ.
+const ANSWERS: Record<string, string> = {
+  intro: "Меня зовут Алия, я в 11 классе",
+  country: "Хочу в Европу",
+  budget: "Бюджет до 15 тысяч долларов в год",
+  ielts: "IELTS 6.0",
+  gpa: "Средний балл 4.5",
+  interests: "Интересует IT и программирование",
+  priority: "Осень 2027, стипендия важнее страны",
+  constraints: "Ограничений нет",
+};
+let walkMemory: MemoryFact[] = [];
+const walkAsked: string[] = [];
+let turns = 0;
+let finished = false;
+while (turns < 15) {
+  const step = selectNextQuestion(walkMemory, walkAsked, { now });
+  if (!step.question) {
+    finished = true;
+    check("интервью завершается честно", !step.reason.includes("Вопросы закончились"), step.reason);
+    break;
+  }
+  const answer = ANSWERS[step.question.id] ?? step.question.quickReplies[0] ?? "Не знаю";
+  walkMemory = mergeFacts(walkMemory, extractFacts(answer, { now }));
+  walkAsked.push(step.question.id);
+  turns += 1;
+}
+check("интервью доходит до конца без зацикливания", finished && turns <= 10, `${turns} вопросов`);
+check("собраны все ключевые факты", CORE_FIELDS.every((field) => fact(walkMemory, field) !== undefined), CORE_FIELDS.filter((field) => !fact(walkMemory, field)).join(", "));
+check("полнота профиля 100%", diagnose(walkMemory).completeness === 100, `${diagnose(walkMemory).completeness}%`);
+check("после интервью маршрут строится", buildRoadmap(walkMemory, null, { now }).steps.length >= 8);
+check("и рекомендации персональны", recommend(walkMemory).recommendations[0].reasons.some((reason) => reason.field !== "program"));
+
+// Ответы «не знаю» не должны превращаться в ложное «всё собрано».
+const halfAnswered = mergeFacts(extractFacts("Меня зовут Алия, 11 класс", { now }), extractFacts("Интересует IT", { now }));
+const honestEnd = selectNextQuestion(halfAnswered, ["intro", "country", "budget", "ielts", "gpa", "interests", "priority", "constraints"], { now });
+check("при незаполненном профиле финал не утверждает обратного", !honestEnd.reason.includes("Все ключевые факты собраны"), honestEnd.reason);
+check("и перечисляет, чего не хватает", honestEnd.reason.includes("Не хватает"), honestEnd.reason);
+check("и называет реальную полноту", honestEnd.reason.includes(`${diagnose(halfAnswered).completeness}%`), honestEnd.reason);
+check("аббревиатура IELTS не пишется строчными", !honestEnd.reason.includes("ielts"), honestEnd.reason);
+
+// Реплика, из которой ничего не извлеклось, не остаётся без ответа.
+const someQuestion = selectNextQuestion(extractFacts("Хочу в Европу, интересует IT", { now }), ["intro", "country", "interests"], { now }).question;
+for (const [answer, expected] of [
+  ["Ограничений нет", "ограничений нет"],
+  ["нет ограничений", "ограничений нет"],
+  ["не знаю", "пропустим"],
+  ["хз", "пропустим"],
+  ["абракадабра", "не уловил"],
+] as const) {
+  const reply = composeAgentReply(extractFacts(answer, { now }), someQuestion, answer).toLowerCase();
+  check(`«${answer}» получает осмысленный ответ`, reply.includes(expected), reply.split("\n")[0]);
+}
+check(
+  "а распознанный факт по-прежнему подтверждается",
+  composeAgentReply(extractFacts("Средний балл 4.5", { now }), someQuestion, "Средний балл 4.5").includes("4.5"),
 );
 
 console.log(`\nИтог: ${passed} ok, ${failed} fail\n`);

@@ -138,7 +138,7 @@ export function ChatInterview({ onOpenManual }: { onOpenManual: () => void }) {
       const stateAfter = useAxiomStore.getState();
       const next = nextQuestion(stateAfter.answeredQuestionIds, stateAfter.memories);
       await new Promise((resolve) => setTimeout(resolve, 600));
-      addMessage({ id: uid(), role: "axiom", text: composeAgentReply(facts, next), ts: Date.now() });
+      addMessage({ id: uid(), role: "axiom", text: composeAgentReply(facts, next, text), ts: Date.now() });
     } catch {
       addMessage({
         id: uid(),
