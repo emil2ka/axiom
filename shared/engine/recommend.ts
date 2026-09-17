@@ -292,12 +292,19 @@ function scoreComponents(program: Program, ctx: ScoreContext): ScoredParts {
 
   let fieldComponent = 0.6;
   if (ctx.interestTags.length) {
-    const matched = program.tags.filter((tag) => ctx.interestTags.includes(tag));
+    // Совпадение направления не бинарное: «маркетинг» раскрывается в теги
+    // marketing + business, и программа, закрывающая оба, должна обходить ту,
+    // что закрывает только общий business.
+    const matched = ctx.interestTags.filter((tag) => program.tags.includes(tag));
+    const coverage = matched.length / ctx.interestTags.length;
     if (matched.length) {
-      fieldComponent = 1;
+      fieldComponent = 0.55 + 0.45 * coverage;
       reasons.push({
-        text: `Направление «${program.field}» совпадает с твоими интересами`,
-        weight: w.field,
+        text:
+          coverage === 1
+            ? `Направление «${program.field}» полностью совпадает с твоими интересами`
+            : `Направление «${program.field}» частично совпадает с твоими интересами`,
+        weight: w.field * fieldComponent,
         field: "interests",
       });
     } else {

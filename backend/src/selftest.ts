@@ -1,5 +1,6 @@
 import {
   DEFAULT_WEIGHTS,
+  EUROPE_COUNTRIES,
   INTERVIEW_QUESTIONS,
   PROGRAMS,
   WHATIF_PRESETS,
@@ -265,14 +266,24 @@ check(
   selectNextQuestion(nlCheap, [], { now, resolvedConflictIds: ["budget-vs-country"] }).kind !== "conflict",
 );
 
-const germanOnly = mergeFacts(
+// Противоречие по языку зависит от направления, а не только от страны.
+const germanLaw = mergeFacts(
+  extractFacts("Хочу в Германию, интересует право", { now }),
+  extractFacts("Не хочу учить новый язык", { now }),
+);
+check(
+  "право в Германии + отказ от языка = противоречие (англоязычных программ нет)",
+  detectConflicts(germanLaw, PROGRAMS, now).some((item) => item.id === "language-vs-country"),
+  detectConflicts(germanLaw, PROGRAMS, now).map((item) => item.id).join(", "),
+);
+const germanIt = mergeFacts(
   extractFacts("Хочу в Германию, интересует IT", { now }),
   extractFacts("Не хочу учить новый язык", { now }),
 );
 check(
-  "языковое ограничение против страны найдено",
-  detectConflicts(germanOnly, PROGRAMS, now).some((item) => item.id === "language-vs-country"),
-  detectConflicts(germanOnly, PROGRAMS, now).map((item) => item.id).join(", "),
+  "а IT в Германии противоречием не считается — англоязычная программа есть",
+  !detectConflicts(germanIt, PROGRAMS, now).some((item) => item.id === "language-vs-country"),
+  detectConflicts(germanIt, PROGRAMS, now).map((item) => item.id).join(", "),
 );
 const pastIntake = extractFacts("Планирую поступление в 2020 году", { now });
 check(
@@ -387,6 +398,60 @@ check(
 );
 
 check("mergeFacts остался совместимым", mergeFacts(startMem, extractFacts("Теперь бюджет до $10k", { now })).length === startMem.length);
+
+console.log("\n[13] Датасет программ");
+check(`программ ≥ 40 (сейчас ${PROGRAMS.length})`, PROGRAMS.length >= 40);
+check("id уникальны", new Set(PROGRAMS.map((program) => program.id)).size === PROGRAMS.length);
+check("у каждой программы есть источник", PROGRAMS.every((program) => program.sources.length > 0 && program.sources[0].url.startsWith("https://")));
+check("все программы помечены демо-данными", PROGRAMS.every((program) => program.demo === true));
+check("стоимость и проживание заполнены", PROGRAMS.every((program) => program.tuitionPerYearUsd >= 0 && program.livingPerYearUsd > 0));
+
+const allTags = new Set(PROGRAMS.flatMap((program) => program.tags));
+const required = ["it", "data", "design", "business", "finance", "engineering", "psychology", "law", "medicine", "architecture", "marketing"];
+check(
+  "покрыты все направления из карты интересов",
+  required.every((tag) => allTags.has(tag)),
+  required.filter((tag) => !allTags.has(tag)).join(", ") || "все",
+);
+
+// Направление, которого раньше не было: топ-1 должен совпадать с запросом.
+for (const [query, tag] of [["Хочу изучать медицину в Европе", "medicine"], ["Интересует право", "law"], ["Хочу на архитектуру", "architecture"], ["Интересует маркетинг", "marketing"]] as const) {
+  const top = recommend(extractFacts(query, { now })).recommendations[0];
+  check(`«${query}» → топ-1 по направлению`, top.program.tags.includes(tag), `${top.program.id} (${top.program.field})`);
+}
+
+const budget10k = PROGRAMS.filter(
+  (program) => program.scholarship === "full" || program.tuitionPerYearUsd + program.livingPerYearUsd <= 10000,
+);
+check(`при бюджете $10k проходит ≥ 8 программ (сейчас ${budget10k.length})`, budget10k.length >= 8, budget10k.map((program) => program.id).join(", "));
+check("есть страны за пределами ЕС", PROGRAMS.some((program) => !EUROPE_COUNTRIES.has(program.country)));
+check("стран ≥ 12", new Set(PROGRAMS.map((program) => program.country)).size >= 12, String(new Set(PROGRAMS.map((program) => program.country)).size));
+
+// Страны и языки из датасета должны распознаваться из речи.
+for (const country of [...new Set(PROGRAMS.map((program) => program.country))]) {
+  const spoken = extractFacts(`Хочу учиться в стране ${country}`, { now });
+  check(`страна «${country}» распознаётся из речи`, spoken.some((item) => item.field === "country" && item.value.includes(country)), spoken.find((item) => item.field === "country")?.value);
+}
+check(
+  "«португальский» не путается со страной Португалия",
+  !extractFacts("Знаю португальский язык", { now }).some((item) => item.field === "country"),
+  extractFacts("Знаю португальский язык", { now }).map((item) => `${item.field}=${item.value}`).join(", "),
+);
+check(
+  "испанский распознаётся как язык",
+  extractFacts("Знаю испанский", { now }).some((item) => item.field === "language" && item.value === "Испанский"),
+);
+
+// «право» легко даёт ложные срабатывания — проверяем обе стороны.
+const saysLaw = (text: string): boolean =>
+  extractFacts(text, { now }).some((item) => item.field === "interests" && item.value === "Право");
+for (const phrase of ["Интересует право", "Хочу изучать право", "Хочу на юриста", "Интересуют права человека"]) {
+  check(`«${phrase}» → направление «Право»`, saysLaw(phrase));
+}
+for (const phrase of ["Поверни направо", "Хочу всё сделать правильно", "У меня есть права"]) {
+  check(`«${phrase}» → НЕ право`, !saysLaw(phrase));
+}
+check("«лечебное дело» → медицина", extractFacts("Интересует лечебное дело", { now }).some((item) => item.field === "interests" && item.value.includes("Медицина")));
 
 console.log(`\nИтог: ${passed} ok, ${failed} fail\n`);
 if (failed > 0) process.exit(1);

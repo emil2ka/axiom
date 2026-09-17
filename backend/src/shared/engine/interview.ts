@@ -263,8 +263,13 @@ export function detectConflicts(
   const constraintValues = splitValues(fact(memories, "constraints")?.value ?? null).join(" ").toLowerCase();
   const refusesLanguage = /не\s+(?:хочу|готов|буду|планирую)[^.]*язы/.test(constraintValues);
   if (refusesLanguage && countries.length && inRegion.length) {
-    const english = inRegion.filter((program) => program.language === "Английский");
-    if (!english.length) {
+    // Смотрим только на программы по интересам: в Германии есть англоязычный IT,
+    // но нет англоязычного права — противоречие зависит от направления.
+    const relevantForLanguage = tags.length
+      ? inRegion.filter((program) => program.tags.some((tag) => tags.includes(tag)))
+      : inRegion;
+    const english = relevantForLanguage.filter((program) => program.language === "Английский");
+    if (relevantForLanguage.length && !english.length) {
       conflicts.push({
         id: "language-vs-country",
         fields: ["constraints", "country"],
