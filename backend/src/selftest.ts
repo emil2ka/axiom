@@ -22,9 +22,12 @@ import {
   mergeFacts,
   nextQuestion,
   normalizeNumerals,
+  rankingChurn,
   recommend,
   reconcileEnrichment,
   scoreProgram,
+  totalPerYear,
+  totalProgramCost,
   selectNextQuestion,
   type MemoryFact,
 } from "./shared/engine/index";
@@ -820,6 +823,72 @@ check(
     const long = { ...PROGRAMS[0], durationYears: 6, scholarship: "full" as const };
     return scoreProgram(short, ctx).score === scoreProgram(long, ctx).score;
   })(),
+);
+
+console.log("\n[21] What If: каждый пресет что-то делает и объясняет что именно");
+
+const whatifProfile = extractFacts("Хочу в Европу, бюджет до $15k, IELTS 6.0, средний балл 4.5, интересует IT", { now });
+const whatifBase = recommend(whatifProfile).recommendations;
+
+for (const preset of WHATIF_PRESETS) {
+  const result = applyWhatIf(whatifProfile, preset.params);
+  check(`«${preset.label}»: сводка непустая`, result.summary.length > 20, result.summary);
+  check(`«${preset.label}»: рейтинг пересчитан целиком`, result.recommendations.length === PROGRAMS.length);
+  // «Сбалансировано» — это сброс к базовым весам, движения от него и не ждём.
+  if (preset.id !== "balanced") {
+    const churn = rankingChurn(whatifBase, result.recommendations);
+    check(
+      `«${preset.label}» заметно меняет топ-5 (${Math.round(churn * 100)}%)`,
+      churn >= 0.1,
+      `${Math.round(churn * 100)}% — пресет, который ничего не делает, хуже отсутствия пресета`,
+    );
+  }
+}
+
+// Сводка должна называть, ЧТО изменили: иначе разные сценарии читаются одинаково.
+const budgetScenario = applyWhatIf(whatifProfile, { budget: 10000, countryWeight: 1, budgetWeight: 1, scholarshipWeight: 1 });
+check("сценарий с бюджетом называет обе суммы", budgetScenario.summary.includes("15 000") && budgetScenario.summary.includes("10 000"), budgetScenario.summary);
+const ieltsScenario = applyWhatIf(whatifProfile, { ielts: 7, countryWeight: 1, budgetWeight: 1, scholarshipWeight: 1 });
+check("сценарий с IELTS называет оба балла", ieltsScenario.summary.includes("6.0") && ieltsScenario.summary.includes("7.0"), ieltsScenario.summary);
+check(
+  "сценарии с разными вводными не выглядят одинаково",
+  budgetScenario.summary !== ieltsScenario.summary,
+);
+check("сводка начинается с заглавной буквы", WHATIF_PRESETS.every((preset) => {
+  const text = applyWhatIf(whatifProfile, preset.params).summary;
+  return text[0] === text[0].toUpperCase();
+}));
+
+// Пресет «бюджет важнее» не должен понижать стипендию: полное покрытие и есть
+// лучший исход по деньгам.
+const budgetFirst = WHATIF_PRESETS.find((preset) => preset.id === "budget-first");
+check("«бюджет важнее» не обесценивает стипендию", (budgetFirst?.params.scholarshipWeight ?? 0) >= 1, String(budgetFirst?.params.scholarshipWeight));
+
+console.log("\n[22] Сравнение программ: данных хватает и «лучшее» честно");
+const compareSet = recommend(extractFacts("Хочу в Европу, бюджет до $15k, интересует IT, IELTS 6.5", { now })).recommendations.slice(0, 3);
+check("у каждой программы есть годовая и полная стоимость", compareSet.every((item) => item.totalPerYearUsd > 0 && item.totalProgramUsd > 0));
+check(
+  "полная стоимость учитывает длительность",
+  compareSet.every((item) => item.totalProgramUsd === Math.round(item.totalPerYearUsd * item.program.durationYears)),
+);
+// Дешевле за год ≠ дешевле за обучение: без отдельной строки подсветка врёт.
+const cheaperPerYearDiffers = (() => {
+  let differs = 0;
+  for (let i = 0; i < PROGRAMS.length; i += 1) {
+    for (let j = i + 1; j < PROGRAMS.length; j += 1) {
+      const a = PROGRAMS[i];
+      const b = PROGRAMS[j];
+      const byYear = totalPerYear(a) < totalPerYear(b) ? a.id : b.id;
+      const byTotal = totalProgramCost(a) < totalProgramCost(b) ? a.id : b.id;
+      if (byYear !== byTotal) differs += 1;
+    }
+  }
+  return differs;
+})();
+check(
+  `в базе есть пары, где дешевле за год ≠ дешевле за обучение (${cheaperPerYearDiffers})`,
+  cheaperPerYearDiffers > 0,
+  "иначе отдельная строка полной стоимости была бы не нужна",
 );
 
 console.log(`\nИтог: ${passed} ok, ${failed} fail\n`);

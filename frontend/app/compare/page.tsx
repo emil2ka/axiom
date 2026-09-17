@@ -77,6 +77,24 @@ export default function ComparePage() {
       cell: (item) => <span className="font-medium text-mist-100">{formatUsd(item.totalPerYearUsd)}</span>,
     },
     {
+      // Дешевле за год ≠ дешевле за обучение: в базе таких пар 11%. Без этой
+      // строки зелёная отметка у «Итого в год» указывала на программу, которая
+      // в сумме дороже — на экране, существующем ради выбора.
+      label: "Итого за всё обучение",
+      best: (items) => {
+        const min = Math.min(...items.map((item) => item.totalProgramUsd));
+        return items.map((item, index) => (item.totalProgramUsd === min ? index : -1)).filter((index) => index !== -1);
+      },
+      cell: (item) => (
+        <span className="font-medium text-mist-100">
+          {formatUsd(item.totalProgramUsd)}
+          <span className="mt-1 block text-[11.5px] font-normal text-mist-500">
+            за {durationLabel(item.program.durationYears)}
+          </span>
+        </span>
+      ),
+    },
+    {
       label: "В бюджет",
       cell: (item) => (
         <span
