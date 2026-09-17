@@ -7,6 +7,7 @@ import {
   applyPriorityWeights,
   applyWhatIf,
   buildRoadmap,
+  FIELD_LABELS,
   detectConflicts,
   diagnose,
   estimateImpact,
@@ -14,6 +15,7 @@ import {
   factTimeline,
   mergeFactsWithDiff,
   revisionCount,
+  getConstraints,
   getGpaPercent,
   extractFacts,
   mergeFacts,
@@ -172,7 +174,7 @@ check(
   [noPriority, withScholarship, withCountry].every((result) => {
     const w = result.weights;
     if (!w) return false;
-    const sum = w.budget + w.country + w.ielts + w.field + w.scholarship + w.timing + w.gpa;
+    const sum = w.budget + w.country + w.ielts + w.field + w.scholarship + w.timing + w.gpa + w.language;
     return Math.abs(sum - 1) < 1e-9;
   }),
 );
@@ -452,6 +454,135 @@ for (const phrase of ["Поверни направо", "Хочу всё сдел
   check(`«${phrase}» → НЕ право`, !saysLaw(phrase));
 }
 check("«лечебное дело» → медицина", extractFacts("Интересует лечебное дело", { now }).some((item) => item.field === "interests" && item.value.includes("Медицина")));
+
+console.log("\n[14] Ограничения, язык и срок старта влияют на выдачу");
+
+// Ограничения: раньше извлекались, показывались чипом и не влияли ни на что.
+for (const [phrase, flag] of [
+  ["Не хочу учить новый язык", "englishOnly"],
+  ["Только на английском", "englishOnly"],
+  ["Без стипендии не потяну", "needsScholarship"],
+  ["Нужна стипендия", "needsScholarship"],
+] as const) {
+  const parsed = getConstraints(extractFacts(phrase, { now }));
+  check(`«${phrase}» → ${flag}`, parsed[flag] === true, JSON.stringify(parsed));
+}
+check(
+  "две формулировки в одной реплике разбираются обе",
+  (() => {
+    const both = getConstraints(extractFacts("Не хочу учить язык и без стипендии не потяну", { now }));
+    return both.englishOnly && both.needsScholarship;
+  })(),
+);
+check("нейтральная фраза не выдумывает ограничений", (() => {
+  const none = getConstraints(extractFacts("Не готов переезжать далеко", { now }));
+  return !none.englishOnly && !none.needsScholarship;
+})());
+
+const germany = extractFacts("Хочу в Германию, интересует инженерия", { now });
+const germanyTop = (memories: MemoryFact[]) => recommend(memories).recommendations[0].program;
+
+check("без ограничений топ-1 может быть на немецком", germanyTop(germany).language === "Немецкий", germanyTop(germany).language);
+const noNewLanguage = mergeFacts(germany, extractFacts("Не хочу учить новый язык", { now }));
+check(
+  "«не хочу учить язык» убирает неанглоязычные программы с первого места",
+  germanyTop(noNewLanguage).language === "Английский",
+  `${germanyTop(noNewLanguage).university} (${germanyTop(noNewLanguage).language})`,
+);
+check(
+  "и объясняет это пробелом, а не молча",
+  recommend(noNewLanguage).recommendations.some((item) =>
+    item.gaps.some((gap) => gap.severity === "high" && gap.text.includes("не учить новый язык")),
+  ),
+);
+const knowsGerman = mergeFacts(noNewLanguage, extractFacts("Знаю немецкий", { now }));
+check(
+  "знание языка снимает ограничение — немецкие программы возвращаются",
+  germanyTop(knowsGerman).language === "Немецкий",
+  `${germanyTop(knowsGerman).university} (${germanyTop(knowsGerman).language})`,
+);
+check(
+  "и превращается в причину, а не в пробел",
+  recommend(knowsGerman).recommendations.some((item) => item.reasons.some((reason) => reason.field === "language")),
+);
+
+const needsMoney = mergeFacts(germany, extractFacts("Без стипендии не потяну", { now }));
+check(
+  "«без стипендии не потяну» убирает программы без стипендии с первого места",
+  germanyTop(needsMoney).scholarship !== "none",
+  `${germanyTop(needsMoney).university} (${germanyTop(needsMoney).scholarship})`,
+);
+
+// Срок старта: маршрут строился под ближайший набор независимо от планов.
+const target = PROGRAMS.find((program) => program.id === "aalto-sci") ?? null;
+const profile2027 = mergeFacts(facts, extractFacts("Планирую поступление в 2027 году", { now }));
+const profile2029 = mergeFacts(facts, extractFacts("Планирую поступление в 2029 году", { now }));
+const applyStep = (memories: MemoryFact[]): string =>
+  buildRoadmap(memories, target).steps.find((step) => step.id.endsWith("-apply"))?.dueMonth ?? "";
+check("маршрут под 2027 остаётся в 2027", applyStep(profile2027).includes("2027"), applyStep(profile2027));
+check("маршрут под 2029 сдвигается на 2029", applyStep(profile2029).includes("2029"), applyStep(profile2029));
+check(
+  "и подпись дедлайна тоже сдвигается",
+  buildRoadmap(profile2029, target).steps.find((step) => step.id.endsWith("-apply"))?.description.includes("2029") === true,
+);
+check("прошлые годы маршрут не сдвигают назад", applyStep(mergeFacts(facts, extractFacts("Планирую поступление в 2020 году", { now }))).includes("2027"));
+
+// Имя и класс должны звучать в ответе, а не просто лежать в памяти.
+const named = diagnose(extractFacts("Меня зовут Алия, 11 класс, хочу в Европу, интересует IT, бюджет до $15k, IELTS 6.5", { now }));
+check("имя звучит в резюме профиля", named.summary.startsWith("Алия,"), named.summary.slice(0, 40));
+check("класс попадает в формулировку цели", named.goal.includes("11 класс"), named.goal);
+
+// Защита от возврата мёртвых фактов: каждое поле должно где-то проявляться.
+console.log("\n[15] Ни одно поле памяти не остаётся мёртвым");
+const probeValues: Record<string, { value: string; numeric?: number }> = {
+  name: { value: "Алия" },
+  grade: { value: "11 класс" },
+  country: { value: "Германия" },
+  budget: { value: "$12 000", numeric: 12000 },
+  ielts: { value: "6.5", numeric: 6.5 },
+  gpa: { value: "4.7/5", numeric: 4.7 },
+  interests: { value: "IT и программирование" },
+  intake: { value: "Осень 2029" },
+  priority: { value: "Стипендия" },
+  language: { value: "Немецкий" },
+  constraints: { value: "не хочу учить новый язык" },
+};
+const emptyRec = recommend([]);
+const emptyRoad = buildRoadmap([], null);
+const emptyDiag = diagnose([]);
+const fingerprint = (value: unknown): string => JSON.stringify(value);
+
+for (const [field, probe] of Object.entries(probeValues)) {
+  const memory: MemoryFact = {
+    id: `probe-${field}`,
+    field: field as MemoryFact["field"],
+    label: FIELD_LABELS[field as MemoryFact["field"]],
+    value: probe.value,
+    display: probe.value,
+    quote: "",
+    confidence: 0.9,
+    numeric: probe.numeric,
+    source: "manual",
+    createdAt: 0,
+  };
+  const withFact = mergeFacts([], [memory]);
+  const changesRanking =
+    fingerprint(recommend(withFact).recommendations.map((item) => [item.program.id, item.score])) !==
+    fingerprint(emptyRec.recommendations.map((item) => [item.program.id, item.score]));
+  const changesRoadmap =
+    fingerprint(buildRoadmap(withFact, null).steps.map((step) => [step.id, step.dueMonth])) !==
+    fingerprint(emptyRoad.steps.map((step) => [step.id, step.dueMonth]));
+  const diagnosed = diagnose(withFact);
+  const changesDiagnosis =
+    fingerprint([diagnosed.summary, diagnosed.strengths, diagnosed.constraints, diagnosed.goal]) !==
+    fingerprint([emptyDiag.summary, emptyDiag.strengths, emptyDiag.constraints, emptyDiag.goal]);
+
+  check(
+    `факт «${FIELD_LABELS[field as MemoryFact["field"]]}» где-то проявляется`,
+    changesRanking || changesRoadmap || changesDiagnosis,
+    `рейтинг=${changesRanking} маршрут=${changesRoadmap} диагноз=${changesDiagnosis}`,
+  );
+}
 
 console.log(`\nИтог: ${passed} ok, ${failed} fail\n`);
 if (failed > 0) process.exit(1);

@@ -1,4 +1,4 @@
-import type { MemoryFact, MemoryField, PriorityKey } from "../types";
+import type { MemoryFact, MemoryField, PriorityKey, ProfileConstraints } from "../types";
 
 export const FIELD_LABELS: Record<MemoryField, string> = {
   name: "Имя",
@@ -127,4 +127,27 @@ export function getPriority(memories: MemoryFact[]): PriorityKey | null {
 
 export function getLanguageNames(memories: MemoryFact[]): string[] {
   return splitValues(factValue(memories, "language"));
+}
+
+/**
+ * Разбирает свободные формулировки ограничений в признаки скоринга.
+ * До этого поле constraints было мёртвым: извлекалось, показывалось чипом
+ * и не влияло ни на рекомендации, ни на маршрут.
+ */
+export function getConstraints(memories: MemoryFact[]): ProfileConstraints {
+  const raw = splitValues(factValue(memories, "constraints"));
+  const text = raw.join(" ").toLowerCase();
+
+  const englishOnly =
+    /не\s+(?:хочу|готов[а-яё]*|буду|планирую|могу)[^.;]{0,40}(?:учить|учи́ть|изучать)[^.;]{0,20}язы/.test(text) ||
+    /только\s+(?:на\s+)?английск/.test(text) ||
+    /нужен\s+английск/.test(text);
+
+  const needsScholarship =
+    /без\s+стипенди/.test(text) ||
+    /нужна\s+стипенди/.test(text) ||
+    /только\s+(?:с\s+)?(?:полной\s+)?стипенди/.test(text) ||
+    /не\s+потян[а-яё]*/.test(text);
+
+  return { englishOnly, needsScholarship, raw };
 }

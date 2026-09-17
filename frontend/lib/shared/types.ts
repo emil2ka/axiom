@@ -121,6 +121,20 @@ export interface ScoreWeights {
   scholarship: number;
   timing: number;
   gpa: number;
+  language: number;
+}
+
+/**
+ * Ограничения, разобранные из свободной речи в признаки, на которые движок
+ * действительно умеет реагировать. raw хранит исходные формулировки, чтобы
+ * ничего не потерялось и можно было показать пользователю его же слова.
+ */
+export interface ProfileConstraints {
+  /** «не хочу учить новый язык», «только на английском» */
+  englishOnly: boolean;
+  /** «без стипендии не потяну» */
+  needsScholarship: boolean;
+  raw: string[];
 }
 
 export interface Reason {

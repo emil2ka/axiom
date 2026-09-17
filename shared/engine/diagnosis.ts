@@ -3,9 +3,12 @@ import { formatUsd, pluralRu } from "./format";
 import {
   CORE_FIELDS,
   fact,
+  factValue,
   getBudget,
   getCountries,
   getGpa,
+  getConstraints,
+  getLanguageNames,
   getGpaPercent,
   getIelts,
   getInterestTags,
@@ -92,23 +95,53 @@ export function diagnose(memories: MemoryFact[], programs: Program[] = PROGRAMS)
     constraints.push("Интересы не указаны — сложно подобрать направление");
   }
 
+  const languages = getLanguageNames(memories).filter((name) => name !== "Английский");
+  for (const language of languages) {
+    const open = programs.filter((program) => program.language === language);
+    if (open.length) {
+      strengths.push(
+        `Знаешь ${language.toLowerCase()} — открывается ${open.length} ${pluralRu(open.length, "программа", "программы", "программ")} на этом языке`,
+      );
+    }
+  }
+
+  // Ограничения, названные самим человеком: раньше они нигде не проявлялись.
+  const stated = getConstraints(memories);
+  for (const phrase of stated.raw) {
+    const capitalized = phrase.charAt(0).toUpperCase() + phrase.slice(1);
+    constraints.push(`Твоё условие: «${capitalized}» — учтено в подборе`);
+  }
+  if (stated.englishOnly) {
+    const english = programs.filter((program) => program.language === "Английский");
+    strengths.push(`Только англоязычные программы: подходит ${english.length} из ${programs.length}`);
+  }
+  if (stated.needsScholarship) {
+    const funded = programs.filter((program) => program.scholarship !== "none");
+    strengths.push(`Со стипендией: ${funded.length} из ${programs.length} программ дают частичное или полное покрытие`);
+  }
+
   if (priority) {
     strengths.push(`Приоритет «${PRIORITY_LABEL[priority] ?? priority}»: ${describePriorityEffect(priority)}`);
   } else {
     constraints.push("Главный приоритет не назван — критерии взвешены поровну, выдача менее заточена под тебя");
   }
 
-  const goalParts: string[] = ["Бакалавриат"];
+  const grade = factValue(memories, "grade");
+  const goalParts: string[] = [grade ? `${grade} → бакалавриат` : "Бакалавриат"];
   goalParts.push(countries.length ? countries.join(", ") : "регион не выбран");
   goalParts.push(interests.length ? interests.join(", ") : "направление не выбрано");
   goalParts.push(intakeYear ? `старт осень ${intakeYear}` : "срок не указан");
   goalParts.push(budget ? `бюджет до ${formatUsd(budget)}/год` : "бюджет не указан");
   const goal = goalParts.join(" · ");
 
+  // Имя — единственный факт, который намеренно не влияет на рейтинг. Но он
+  // должен звучать в ответе: иначе память о человеке остаётся декорацией.
+  const name = factValue(memories, "name");
+  const greeting = name ? `${name}, ` : "";
   const summary =
     completeness >= 60
-      ? `Профиль заполнен на ${completeness}%. Цель понятна: ${goal}. Ниже — сильные стороны и то, что ограничивает выбор.`
-      : `Профиль заполнен на ${completeness}%. Данных пока мало — ответь ещё на несколько вопросов интервью, и рекомендации станут точнее.`;
+      ? `${greeting}профиль заполнен на ${completeness}%. Цель понятна: ${goal}. Ниже — сильные стороны и то, что ограничивает выбор.`
+      : `${greeting}профиль заполнен на ${completeness}%. Данных пока мало — ответь ещё на несколько вопросов интервью, и рекомендации станут точнее.`;
 
   return {
     summary,

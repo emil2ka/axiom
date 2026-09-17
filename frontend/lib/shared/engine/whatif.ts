@@ -53,6 +53,7 @@ export function buildWeights(params: WhatIfParams): ScoreWeights {
     scholarship: DEFAULT_WEIGHTS.scholarship * (params.scholarshipWeight ?? 1),
     timing: DEFAULT_WEIGHTS.timing,
     gpa: DEFAULT_WEIGHTS.gpa,
+    language: DEFAULT_WEIGHTS.language,
   };
   return normalizeWeights(base);
 }

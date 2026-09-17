@@ -348,15 +348,32 @@ function findName(text: string): { value: string; quote: string; index: number }
   return { value: name, quote: clipQuote(text, match.index, match[0].length), index: match.index };
 }
 
+/**
+ * Ограничения звучат по-разному: «не хочу…», «без стипендии не потяну»,
+ * «только на английском», «нужна стипендия». Ловим все формы — иначе
+ * ограничение молча теряется и рекомендации его не учитывают.
+ */
+const CONSTRAINT_PATTERNS: RegExp[] = [
+  /(?:не\s+(?:хочу|могу|буду|планирую|рассматриваю|готов[а-яё]*))\s+[^.!?;]{3,90}/gi,
+  /без\s+(?:стипенди[а-яё]*|гранта)[^.!?;]{0,60}/gi,
+  /(?:нужна|нужен|только\s+с)\s+(?:полн[а-яё]*\s+)?(?:стипенди[а-яё]*|грант)[^.!?;]{0,50}/gi,
+  /только\s+(?:на\s+)?английск[а-яё]*[^.!?;]{0,40}/gi,
+  /(?:не\s+потян[а-яё]*|финансово\s+не\s+потян[а-яё]*)[^.!?;]{0,50}/gi,
+];
+
 function findConstraints(text: string): { value: string; quote: string; index: number }[] {
   const results: { value: string; quote: string; index: number }[] = [];
-  const pattern = /(?:не\s+(?:хочу|могу|готов[а-яё]*|буду|планирую|рассматриваю)|не\s+готов[а-яё]*)\s+[^.!?]{3,90}/gi;
-  let match: RegExpExecArray | null;
-  while ((match = pattern.exec(text)) !== null) {
-    const value = match[0].trim().replace(/\s+/g, " ");
-    results.push({ value, quote: clipQuote(text, match.index, match[0].length), index: match.index });
+  for (const pattern of CONSTRAINT_PATTERNS) {
+    pattern.lastIndex = 0;
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(text)) !== null) {
+      const value = match[0].trim().replace(/\s+/g, " ");
+      // Одна фраза может подойти под два шаблона — не дублируем.
+      if (results.some((item) => item.value.includes(value) || value.includes(item.value))) continue;
+      results.push({ value, quote: clipQuote(text, match.index, match[0].length), index: match.index });
+    }
   }
-  return results;
+  return results.sort((a, b) => a.index - b.index);
 }
 
 function clipQuote(text: string, index: number, length: number, max = 140): string {

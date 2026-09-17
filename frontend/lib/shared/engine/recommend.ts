@@ -7,17 +7,20 @@ import type {
   Reason,
   RecommendResult,
   Recommendation,
+  ProfileConstraints,
   ScoreWeights,
 } from "../types";
 import { formatDateRu, formatUsd, parseIso } from "./format";
 import {
   getBudget,
+  getConstraints,
   getCountries,
   getGpaPercent,
   getIelts,
   getInterestTags,
   getInterests,
   getIntakeYear,
+  getLanguageNames,
   getPriority,
 } from "./profile";
 import programsData from "../data/programs.json";
@@ -25,13 +28,14 @@ import programsData from "../data/programs.json";
 export const PROGRAMS = programsData as unknown as Program[];
 
 export const DEFAULT_WEIGHTS: ScoreWeights = {
-  budget: 0.23,
-  country: 0.17,
-  ielts: 0.14,
-  field: 0.25,
-  scholarship: 0.09,
+  budget: 0.22,
+  country: 0.16,
+  ielts: 0.13,
+  field: 0.24,
+  scholarship: 0.08,
   timing: 0.04,
-  gpa: 0.08,
+  gpa: 0.07,
+  language: 0.06,
 };
 
 export const EUROPE_COUNTRIES = new Set([
@@ -86,7 +90,8 @@ export function normalizeWeights(weights: ScoreWeights): ScoreWeights {
     weights.field +
     weights.scholarship +
     weights.timing +
-    weights.gpa;
+    weights.gpa +
+    weights.language;
   if (sum <= 0) return { ...DEFAULT_WEIGHTS };
   return {
     budget: weights.budget / sum,
@@ -96,6 +101,7 @@ export function normalizeWeights(weights: ScoreWeights): ScoreWeights {
     scholarship: weights.scholarship / sum,
     timing: weights.timing / sum,
     gpa: weights.gpa / sum,
+    language: weights.language / sum,
   };
 }
 
@@ -111,6 +117,7 @@ export function applyPriorityWeights(base: ScoreWeights, priority: PriorityKey |
     scholarship: base.scholarship * (multipliers.scholarship ?? 1),
     timing: base.timing * (multipliers.timing ?? 1),
     gpa: base.gpa * (multipliers.gpa ?? 1),
+    language: base.language * (multipliers.language ?? 1),
   };
   return normalizeWeights(boosted);
 }
@@ -142,6 +149,7 @@ const FIELD_WEIGHT_LABEL: Record<keyof ScoreWeights, string> = {
   scholarship: "«стипендия»",
   timing: "«сроки»",
   gpa: "«успеваемость»",
+  language: "«язык обучения»",
 };
 
 export interface ScoreOverrides {
@@ -158,6 +166,8 @@ export interface ScoreContext {
   interestTags: string[];
   interestLabels: string[];
   gpaPercent: number | null;
+  knownLanguages: string[];
+  constraints: ProfileConstraints;
   priority: PriorityKey | null;
   intakeYear: number | null;
   weights: ScoreWeights;
@@ -179,6 +189,8 @@ export function buildContext(
     interestTags: getInterestTags(memories),
     interestLabels: getInterests(memories),
     gpaPercent,
+    knownLanguages: getLanguageNames(memories),
+    constraints: getConstraints(memories),
     priority: getPriority(memories),
     intakeYear: getIntakeYear(memories),
     weights,
@@ -313,7 +325,8 @@ function scoreComponents(program: Program, ctx: ScoreContext): ScoredParts {
     }
   }
 
-  const scholarshipComponent = program.scholarship === "full" ? 1 : program.scholarship === "partial" ? 0.7 : 0.35;
+  let scholarshipComponent = program.scholarship === "full" ? 1 : program.scholarship === "partial" ? 0.7 : 0.35;
+  if (ctx.constraints.needsScholarship && program.scholarship === "none") scholarshipComponent = 0.05;
   if (program.scholarship !== "none") {
     reasons.push({
       text: `Поддержка: ${program.scholarshipNote}`,
@@ -336,11 +349,41 @@ function scoreComponents(program: Program, ctx: ScoreContext): ScoredParts {
     });
   }
 
+  let languageComponent = 1;
   if (program.language !== "Английский") {
-    gaps.push({
-      text: `Обучение на языке: ${program.language} — потребуется подтверждение уровня B2`,
-      severity: "medium",
+    if (ctx.knownLanguages.includes(program.language)) {
+      languageComponent = 1;
+      reasons.push({
+        text: `Ты знаешь ${program.language.toLowerCase()} — программа идёт на нём, языковой барьер снят`,
+        weight: w.language * 1.4,
+        field: "language",
+      });
+    } else if (ctx.constraints.englishOnly) {
+      // Пользователь прямо сказал, что новый язык учить не готов — это не
+      // «замечание внизу карточки», а причина опустить программу в рейтинге.
+      languageComponent = 0.05;
+      gaps.push({
+        text: `Ты просил не учить новый язык, а обучение здесь на языке: ${program.language}`,
+        severity: "high",
+      });
+    } else {
+      languageComponent = 0.4;
+      gaps.push({
+        text: `Обучение на языке: ${program.language} — потребуется подтверждение уровня B2`,
+        severity: "medium",
+      });
+    }
+  } else if (ctx.constraints.englishOnly) {
+    reasons.push({
+      text: `Обучение полностью на английском — как ты и просил`,
+      weight: w.language,
+      field: "constraints",
     });
+  }
+
+  // «Без стипендии не потяну» — тоже ограничение, а не пожелание.
+  if (ctx.constraints.needsScholarship && program.scholarship === "none") {
+    gaps.push({ text: `Ты просил вариант со стипендией, а здесь её нет`, severity: "high" });
   }
 
   let gpaComponent = 0.6;
@@ -392,6 +435,7 @@ function scoreComponents(program: Program, ctx: ScoreContext): ScoredParts {
       scholarship: scholarshipComponent,
       timing: timingComponent,
       gpa: gpaComponent,
+      language: languageComponent,
     },
     reasons,
     gaps,
@@ -448,6 +492,20 @@ function buildPriorityReason(
   return null;
 }
 
+/** Сколько заявленных ограничений нарушает программа. */
+export function countConstraintViolations(program: Program, ctx: ScoreContext): number {
+  let violations = 0;
+  if (
+    ctx.constraints.englishOnly &&
+    program.language !== "Английский" &&
+    !ctx.knownLanguages.includes(program.language)
+  ) {
+    violations += 1;
+  }
+  if (ctx.constraints.needsScholarship && program.scholarship === "none") violations += 1;
+  return violations;
+}
+
 export function scoreProgram(program: Program, ctx: ScoreContext): Omit<Recommendation, "rank"> {
   const { components, reasons, gaps } = scoreComponents(program, ctx);
   const weights = ctx.weights;
@@ -459,8 +517,14 @@ export function scoreProgram(program: Program, ctx: ScoreContext): Omit<Recommen
     components.field * weights.field +
     components.scholarship * weights.scholarship +
     components.timing * weights.timing +
-    components.gpa * weights.gpa;
-  const score = Math.round((weighted / weightSum) * 100);
+    components.gpa * weights.gpa +
+    components.language * weights.language;
+  // Ограничение — не пожелание с весом, а условие. Нарушение множит итог, а не
+  // сдвигает его на пару баллов: иначе человеку, который сказал «новый язык не
+  // учу», немецкие программы всё равно оставались бы на первых местах.
+  const violations = countConstraintViolations(program, ctx);
+  const constraintPenalty = violations === 0 ? 1 : Math.pow(0.45, violations);
+  const score = Math.round((weighted / weightSum) * 100 * constraintPenalty);
   const budgetDelta = ctx.budget ? ctx.budget - totalPerYear(program) : null;
 
   const severityOrder: Record<Gap["severity"], number> = { high: 0, medium: 1, low: 2 };

@@ -1,6 +1,6 @@
 import type { MemoryFact, Program, Roadmap, RoadmapStep } from "../types";
 import { shiftMonths, shiftMonthsIso } from "./format";
-import { getGpaPercent, getInterestTags, getIelts, getLanguageNames } from "./profile";
+import { getGpaPercent, getIntakeYear, getInterestTags, getIelts, getLanguageNames } from "./profile";
 import { PROGRAMS, recommend } from "./recommend";
 
 interface DraftStep extends RoadmapStep {
@@ -61,8 +61,20 @@ export function buildRoadmap(memories: MemoryFact[], program: Program | null, pr
   const ielts = getIelts(memories);
   const languages = getLanguageNames(memories);
   const req = target.ieltsMin;
-  const deadlineIso = target.deadlines[0]?.date ?? "2027-07-01";
-  const deadlineLabel = target.deadlines[0]?.label ?? "Подача заявки";
+  const rawDeadlineIso = target.deadlines[0]?.date ?? "2027-07-01";
+  // Дедлайн в датасете указан для ближайшего набора. Если человек планирует
+  // старт позже, весь маршрут сдвигается на соответствующее число лет —
+  // иначе тому, кто поступает в 2028, выдавался план под набор 2027.
+  const intakeYear = getIntakeYear(memories);
+  const deadlineYear = Number(rawDeadlineIso.slice(0, 4));
+  const yearShift = intakeYear && intakeYear > deadlineYear ? intakeYear - deadlineYear : 0;
+  const deadlineIso = yearShift
+    ? `${deadlineYear + yearShift}${rawDeadlineIso.slice(4)}`
+    : rawDeadlineIso;
+  const rawLabel = target.deadlines[0]?.label ?? "Подача заявки";
+  const deadlineLabel = yearShift
+    ? rawLabel.replace(String(deadlineYear), String(deadlineYear + yearShift))
+    : rawLabel;
   const userTags = getInterestTags(memories);
   const focusTags = userTags.length ? userTags : target.tags;
   const sourceLabel = target.sources[0]?.label ?? "источник вуза";
