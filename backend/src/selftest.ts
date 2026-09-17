@@ -6,6 +6,7 @@ import {
   WHATIF_PRESETS,
   applyPriorityWeights,
   applyWhatIf,
+  buildContext,
   buildRoadmap,
   FIELD_LABELS,
   detectConflicts,
@@ -23,6 +24,7 @@ import {
   normalizeNumerals,
   recommend,
   reconcileEnrichment,
+  scoreProgram,
   selectNextQuestion,
   type MemoryFact,
 } from "./shared/engine/index";
@@ -757,6 +759,68 @@ check("бюджет 9 млн отклонён", insane.rejected.some((item) => i
 // Пустой ответ модели ничего не ломает.
 const untouched = reconcileEnrichment(llmRules, [], llmText);
 check("пустой ответ модели оставляет факты правил как есть", untouched.facts.length === llmRules.length && untouched.added.length === 0);
+
+console.log("\n[19] Грязный ввод не ломает сервис");
+
+// Ни один ввод не должен приводить к исключению: реплику печатает живой человек.
+const messy = ["", "   ", "\n\n", "?!?!", "😀🎓✨", "...", "аааааааа", "12345", "$$$", "<script>alert(1)</script>", "'; DROP TABLE--"];
+for (const input of messy) {
+  let threw = false;
+  let produced = 0;
+  try {
+    produced = extractFacts(input, { now }).length;
+  } catch {
+    threw = true;
+  }
+  check(`${JSON.stringify(input).slice(0, 22)} не ломает извлечение`, !threw, "выброшено исключение");
+  check(`${JSON.stringify(input).slice(0, 22)} не порождает выдуманных фактов`, produced === 0, String(produced));
+}
+
+// Длинная реплика: у /extract лимит 2000 символов, движок должен их тянуть.
+const longText = "Я очень долго думала куда поступать и перебирала варианты. ".repeat(28) + "Хочу в Европу, бюджет до $15k, IELTS 6.5, интересует IT.";
+const longStart = Date.now();
+const longFacts = extractFacts(longText.slice(0, 2000), { now });
+check("длинная реплика обрабатывается быстро", Date.now() - longStart < 100, `${Date.now() - longStart} мс`);
+check("и факты из её конца всё равно находятся", longFacts.length >= 3, longFacts.map((item) => item.field).join(", "));
+
+// Противоречия внутри одной реплики разрешаются, а не ломают разбор.
+const conflicting = extractFacts("Хочу в Германию и в Польшу, бюджет 10 и 20 тысяч долларов", { now });
+check("две страны в одной реплике сохраняются обе", conflicting.find((item) => item.field === "country")?.value === "Германия; Польша", conflicting.find((item) => item.field === "country")?.value);
+check("из двух сумм берётся одна", typeof conflicting.find((item) => item.field === "budget")?.numeric === "number");
+
+// Частые опечатки.
+check("«Евроапу» распознаётся как Европа", extractFacts("хочу в Евроапу", { now }).some((item) => item.field === "country" && item.value === "Европа"));
+check("«айлст 6.5» распознаётся как IELTS", extractFacts("айлст 6.5", { now }).find((item) => item.field === "ielts")?.numeric === 6.5);
+check("«бюджед до 15к» распознаётся", extractFacts("бюджед до 15к", { now }).find((item) => item.field === "budget")?.numeric === 15000);
+
+console.log("\n[20] Полная стоимость программы");
+const withDuration = recommend(extractFacts("Хочу в Европу, бюджет до $15k, интересует IT, IELTS 6.5", { now })).recommendations;
+check("у каждой рекомендации есть стоимость всей программы", withDuration.every((item) => item.totalProgramUsd > 0));
+check(
+  "она равна годовой, умноженной на длительность",
+  withDuration.every((item) => item.totalProgramUsd === Math.round(item.totalPerYearUsd * item.program.durationYears)),
+);
+const fourYear = PROGRAMS.find((program) => program.durationYears === 4 && program.scholarship !== "full");
+const threeYear = PROGRAMS.find((program) => program.durationYears === 3 && program.scholarship !== "full");
+check("в базе есть программы разной длительности", fourYear !== undefined && threeYear !== undefined);
+check(
+  "при равной годовой цене более длинная программа оценивается ниже",
+  (() => {
+    const ctx = buildContext(extractFacts("Хочу в Европу, бюджет до $20k, интересует IT", { now }));
+    const short = { ...PROGRAMS[0], durationYears: 3, scholarship: "partial" as const };
+    const long = { ...PROGRAMS[0], durationYears: 5, scholarship: "partial" as const };
+    return scoreProgram(short, ctx).score > scoreProgram(long, ctx).score;
+  })(),
+);
+check(
+  "но полная стипендия снимает штраф за длительность",
+  (() => {
+    const ctx = buildContext(extractFacts("Хочу в Европу, бюджет до $20k, интересует IT", { now }));
+    const short = { ...PROGRAMS[0], durationYears: 3, scholarship: "full" as const };
+    const long = { ...PROGRAMS[0], durationYears: 6, scholarship: "full" as const };
+    return scoreProgram(short, ctx).score === scoreProgram(long, ctx).score;
+  })(),
+);
 
 console.log(`\nИтог: ${passed} ok, ${failed} fail\n`);
 if (failed > 0) process.exit(1);

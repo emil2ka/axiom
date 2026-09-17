@@ -163,6 +163,8 @@ export interface Recommendation {
   reasons: Reason[];
   gaps: Gap[];
   totalPerYearUsd: number;
+  /** Стоимость всей программы: за год × длительность. Решающая цифра для семьи. */
+  totalProgramUsd: number;
   budgetDeltaUsd: number | null;
 }
 

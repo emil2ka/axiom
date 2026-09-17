@@ -26,7 +26,8 @@ export interface ExtractOptions {
 }
 
 const COUNTRY_PATTERNS: { name: string; re: RegExp }[] = [
-  { name: "Европа", re: /европ/i },
+  // «Евроапа», «Еврпоа» — перестановка букв при быстром наборе очень частая.
+  { name: "Европа", re: /европ|евроап|еврпо|евопр/i },
   { name: "Германия", re: /германи/i },
   { name: "Польша", re: /польш/i },
   { name: "Чехия", re: /чехи|чехии|чехию/i },
@@ -176,7 +177,8 @@ interface IeltsMatch {
 }
 
 function findIelts(text: string): IeltsMatch | null {
-  const word = /ielts|айелтс|айэлтс|айлтс|аелтс/i.exec(text);
+  // «айлст», «илтс» — те же перестановки, что и в «Европе».
+  const word = /ielts|ietls|айелтс|айэлтс|айлтс|аелтс|айлст|илтс/i.exec(text);
   const without = /без\s+(?:ielts|айелтс|айэлтс|айлтс)/i.exec(text);
   if (!word && !without) return null;
   const anchor = word ?? without;

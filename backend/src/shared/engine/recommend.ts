@@ -10,7 +10,7 @@ import type {
   ProfileConstraints,
   ScoreWeights,
 } from "../types";
-import { formatDateRu, formatUsd, parseIso } from "./format";
+import { formatDateRu, formatUsd, parseIso, pluralRu } from "./format";
 import {
   getBudget,
   getConstraints,
@@ -201,6 +201,15 @@ export function totalPerYear(program: Program): number {
   return program.tuitionPerYearUsd + program.livingPerYearUsd;
 }
 
+/**
+ * Стоимость всей программы. Бюджет называют за год, но платить придётся за все
+ * годы: четырёхлетняя за $11 000 дороже трёхлетней за $13 000. Без этого
+ * движок считал их равными, а семья узнавала разницу уже после выбора.
+ */
+export function totalProgramCost(program: Program): number {
+  return Math.round(totalPerYear(program) * program.durationYears);
+}
+
 export function fitLabel(score: number): Recommendation["fitLabel"] {
   if (score >= 78) return "Отличное соответствие";
   if (score >= 62) return "Хорошее соответствие";
@@ -224,7 +233,23 @@ function scoreComponents(program: Program, ctx: ScoreContext): ScoredParts {
   const effectiveCost = program.scholarship === "full" ? total * 0.15 : total;
   if (ctx.budget && ctx.budget > 0) {
     const ratio = effectiveCost / ctx.budget;
-    budgetComponent = ratio <= 1 ? 1 : ratio <= 1.15 ? 0.75 : ratio <= 1.3 ? 0.45 : ratio <= 1.5 ? 0.2 : 0.05;
+    // Внутри бюджета оценка непрерывна, а не «всё подходящее = 1.0»: запас
+    // денег — реальное преимущество, и без него пять разных программ получали
+    // один и тот же балл, а выдача выглядела так, будто движок их не различает.
+    // Длительность входит сюда же: лишний год обучения — это лишний год оплаты.
+    // Но при полной стипендии лишний год семье ничего не стоит, поэтому штрафа нет.
+    const durationPenalty =
+      program.scholarship === "full" ? 1 : 1 - 0.05 * Math.max(0, program.durationYears - 3);
+    budgetComponent =
+      ratio <= 1
+        ? (1 - 0.15 * ratio) * durationPenalty
+        : ratio <= 1.15
+          ? 0.75
+          : ratio <= 1.3
+            ? 0.45
+            : ratio <= 1.5
+              ? 0.2
+              : 0.05;
     if (program.scholarship === "full") {
       reasons.push({
         text: `Стипендия покрывает обучение и проживание — стоимость почти не расходует бюджет`,
@@ -233,7 +258,7 @@ function scoreComponents(program: Program, ctx: ScoreContext): ScoredParts {
       });
     } else if (total <= ctx.budget) {
       reasons.push({
-        text: `Полная стоимость ${formatUsd(total)}/год укладывается в бюджет — запас ${formatUsd(ctx.budget - total)}`,
+        text: `${formatUsd(total)}/год укладывается в бюджет (запас ${formatUsd(ctx.budget - total)}); за ${program.durationYears} ${pluralRu(Math.round(program.durationYears), "год", "года", "лет")} — ${formatUsd(totalProgramCost(program))}`,
         weight: w.budget * budgetComponent,
         field: "budget",
       });
@@ -554,6 +579,7 @@ export function scoreProgram(program: Program, ctx: ScoreContext): Omit<Recommen
     reasons: [...reasons].sort((a, b) => b.weight - a.weight).slice(0, 4),
     gaps: [...gaps].sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]),
     totalPerYearUsd: totalPerYear(program),
+    totalProgramUsd: totalProgramCost(program),
     budgetDeltaUsd: budgetDelta,
   };
 }
