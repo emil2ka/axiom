@@ -9,6 +9,7 @@ import { readFileSync } from "node:fs";
  * включая цифры, захардкоженные на лендинге.
  */
 import {
+  INTERVIEW_QUESTIONS,
   PROGRAMS,
   WHATIF_PRESETS,
   applyWhatIf,
@@ -235,6 +236,57 @@ check(
   /не гарантия поступления/i.test(readme),
 );
 check("README помечает данные демонстрационными", /демонстрационные|Демо-данные/i.test(readme));
+
+console.log("\n[11] Обещания интерфейса подкреплены движком");
+// Каждое утверждение на экранах проверяется кодом. Класс ошибок, который стоит
+// дороже всего на защите, — сервис уверенно говорит то, чего не делает.
+const landing = readFileSync(new URL("../../frontend/app/page.tsx", import.meta.url), "utf8");
+
+// «Сказал "хочу Европу и бюджет до $15k" — увидишь, как слова превращаются в факты»
+const landingExample = /Сказал «([^»]+)»/.exec(landing)?.[1] ?? "";
+check("лендинг приводит конкретный пример реплики", landingExample.length > 10, landingExample);
+const exampleFacts = extractFacts(landingExample, {});
+check(`пример «${landingExample}» действительно даёт факты`, exampleFacts.length >= 2, exampleFacts.map((item) => item.field).join(", "));
+check("и у каждого факта есть цитата — иначе подсвечивать нечего", exampleFacts.every((item) => item.quote.length > 0));
+
+// «Меняешь бюджет или приоритет — рейтинг мгновенно перестраивается»
+const claimsRerank = /рейтинг мгновенно перестраивается/.test(landing);
+if (claimsRerank) {
+  const profile = extractFacts("Хочу в Европу, бюджет до $15k, IELTS 6.0, средний балл 4.5, интересует IT", {});
+  const baseline = recommend(profile).recommendations;
+  const cheaper = profile.map((item) => (item.field === "budget" ? { ...item, value: "до $10 000", display: "до $10 000", numeric: 10000 } : item));
+  const churn = rankingChurn(baseline, recommend(cheaper).recommendations);
+  check(
+    `обещание «рейтинг перестраивается» подтверждается правкой бюджета (${Math.round(churn * 100)}%)`,
+    churn >= 0.1,
+    `${Math.round(churn * 100)}% — обещание на лендинге без эффекта на экране`,
+  );
+}
+
+// «Интервью: страна, бюджет, IELTS, интересы, сроки» — всё это должно спрашиваться.
+const interviewClaim = /Разговор голосом или текстом: ([^"]+)\./.exec(landing)?.[1] ?? "";
+const asked = INTERVIEW_QUESTIONS.map((question) => question.text).join(" ").toLowerCase();
+for (const topic of ["стран", "бюджет", "ielts", "интерес"]) {
+  check(`интервью действительно спрашивает про «${topic}»`, asked.includes(topic), interviewClaim);
+}
+check(
+  "лендинг не обещает вопросов про дедлайны — их интервью не задаёт",
+  !/Разговор голосом или текстом:[^"]*дедлайн/.test(landing),
+  interviewClaim,
+);
+
+// «Каждая программа объясняется через твою память»
+for (const says of ["Интересует IT", "Хочу в Европу, бюджет до $15k, IELTS 6.0, интересует IT"]) {
+  const cards = recommend(extractFacts(says, {})).recommendations;
+  const honest = cards.filter(
+    (card) => card.reasons.some((reason) => reason.field !== "program") || card.gaps.some((gap) => gap.text.includes("Объяснение пока общее")),
+  );
+  check(
+    `«${says.slice(0, 28)}»: каждая карточка либо личная, либо честно это признаёт`,
+    honest.length === cards.length,
+    `${honest.length}/${cards.length}`,
+  );
+}
 
 console.log(`\nИтог демо-сценария: ${passed} ok, ${failed} fail\n`);
 if (failed > 0) process.exit(1);

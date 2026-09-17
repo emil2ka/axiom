@@ -447,6 +447,23 @@ function scoreComponents(program: Program, ctx: ScoreContext): ScoredParts {
     gpaComponent = 1;
   }
 
+  // Экран рекомендаций обещает, что каждая программа объясняется через память.
+  // При скудном профиле объяснять нечем: в карточке оставались только общие
+  // факты о программе. Честнее сказать, чего не хватает, чем делать вид.
+  const knownScoringFacts = [ctx.budget !== null, ctx.countries.length > 0, ctx.ielts !== null, ctx.interestTags.length > 0].filter(Boolean).length;
+  if (knownScoringFacts <= 1) {
+    const missing = [
+      ctx.interestTags.length ? null : "направление",
+      ctx.budget === null ? "бюджет" : null,
+      ctx.countries.length ? null : "страну",
+      ctx.ielts === null ? "IELTS" : null,
+    ].filter((item): item is string => item !== null);
+    gaps.push({
+      text: `Объяснение пока общее — я мало о тебе знаю. Назови ${missing.slice(0, 2).join(" и ")}, и подбор станет личным`,
+      severity: "low",
+    });
+  }
+
   // Приоритет из памяти — не просто вес, а видимое объяснение в карточке программы.
   const priorityReason = buildPriorityReason(program, ctx, { budgetComponent, countryComponent });
   if (priorityReason) reasons.push(priorityReason);
