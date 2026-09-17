@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
-    "sync": "node scripts/sync-shared.mjs"
+    "sync": "node scripts/sync-shared.mjs",
+    "check-sync": "node scripts/check-shared.mjs"
   }
 }

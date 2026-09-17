@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 /**
  * Прогон демо-сценария из README, шаг за шагом.
  *
@@ -216,6 +218,23 @@ check("маршрут строится даже без профиля", buildRoa
 check("интервью начинает со знакомства", selectNextQuestion([], [], {}).kind === "opener");
 const nonsense = extractFacts("асдфгх ячсмить", {});
 check("бессмыслица не создаёт выдуманных фактов", nonsense.length === 0, nonsense.map((item) => item.field).join(", "));
+
+console.log("\n[10] README не расходится с кодом");
+// Числа в README жюри проверит первым делом: «45 программ» должно быть 45.
+const readme = readFileSync(new URL("../../README.md", import.meta.url), "utf8");
+// \b в JavaScript не работает с кириллицей — границы слов считаются только по
+// латинице. Поэтому привязываемся к целой фразе, а не к отдельному слову.
+const datasetClaim = /(\d+) программ\w* в (\d+) стран\w*/.exec(readme);
+const claimedPrograms = datasetClaim ? Number(datasetClaim[1]) : null;
+const claimedCountries = datasetClaim ? Number(datasetClaim[2]) : null;
+const actualCountries = new Set(PROGRAMS.map((program) => program.country)).size;
+check(`README обещает ${claimedPrograms} программ — в базе ${PROGRAMS.length}`, claimedPrograms === PROGRAMS.length);
+check(`README обещает ${claimedCountries} стран — в базе ${actualCountries}`, claimedCountries === actualCountries);
+check(
+  "README не обещает точность соответствия как гарантию поступления",
+  /не гарантия поступления/i.test(readme),
+);
+check("README помечает данные демонстрационными", /демонстрационные|Демо-данные/i.test(readme));
 
 console.log(`\nИтог демо-сценария: ${passed} ok, ${failed} fail\n`);
 if (failed > 0) process.exit(1);
