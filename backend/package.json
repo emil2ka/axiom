@@ -13,7 +13,8 @@
     "selftest": "tsx src/selftest.ts",
     "e2e": "tsx src/e2e.ts",
     "quality": "tsx src/quality.ts",
-    "verify": "npm run typecheck && npm run selftest && npm run e2e && npm run quality",
+    "demo": "tsx src/demo.ts",
+    "verify": "npm run typecheck && npm run selftest && npm run e2e && npm run quality && npm run demo",
     "sync": "node ../scripts/sync-shared.mjs"
   },
   "dependencies": {

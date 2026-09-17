@@ -112,6 +112,19 @@ export function buildRoadmap(memories: MemoryFact[], program: Program | null, pr
       why: "Сертификат нужен до подачи заявки.",
       sourceNote: "Демо-данные · требования программы",
     });
+  } else if (req !== null && ielts >= req) {
+    // Балл проходит — сдавать нечего, но категория «экзамены» не должна быть
+    // пустой, и повод реальный: сертификат действует два года и вполне может
+    // истечь между сдачей в 10 классе и подачей документов.
+    push({
+      id: `${target.id}-ielts-validity`,
+      category: "exam",
+      title: "Проверить срок действия сертификата IELTS",
+      description: `Твой балл ${ielts.toFixed(1)} проходит порог ${req.toFixed(1)}. Убедись, что сертификат будет действителен на дату подачи — если нет, заложи время на пересдачу.`,
+      dueIso: shiftMonthsIso(deadlineIso, -5),
+      why: "Результат IELTS действует 2 года с даты экзамена.",
+      sourceNote: "Рекомендация AXIOM",
+    });
   } else if (req !== null && ielts < req) {
     push({
       id: `${target.id}-ielts-up`,
