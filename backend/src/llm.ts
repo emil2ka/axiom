@@ -1,6 +1,8 @@
 import { z } from "zod";
 import type { MemoryFact } from "./shared/types";
 import { FIELD_LABELS } from "./shared/engine/index";
+import { logWarn } from "./log";
+import { llmStats } from "./metrics";
 
 const MEMORY_FIELDS = [
   "name",
@@ -98,10 +100,78 @@ async function callOpenAi(prompt: string): Promise<string | null> {
   }
 }
 
+// ── Кэш ответов ───────────────────────────────────────────────────────────
+// На демо одни и те же реплики повторяются десятки раз. Кэш убирает лишние
+// вызовы, деньги и задержку; TTL короткий, чтобы правки промпта подхватывались.
+const CACHE_TTL_MS = 10 * 60 * 1000;
+const CACHE_LIMIT = 200;
+const cache = new Map<string, { value: string; expiresAt: number }>();
+
+function cacheKey(prompt: string): string {
+  let hash = 0;
+  for (let index = 0; index < prompt.length; index += 1) {
+    hash = (hash * 31 + prompt.charCodeAt(index)) | 0;
+  }
+  return `${provider()}:${prompt.length}:${hash}`;
+}
+
+function cacheGet(prompt: string): string | null {
+  const key = cacheKey(prompt);
+  const hit = cache.get(key);
+  if (!hit) return null;
+  if (hit.expiresAt < Date.now()) {
+    cache.delete(key);
+    return null;
+  }
+  return hit.value;
+}
+
+function cacheSet(prompt: string, value: string): void {
+  if (cache.size >= CACHE_LIMIT) {
+    const oldest = cache.keys().next().value;
+    if (oldest !== undefined) cache.delete(oldest);
+  }
+  cache.set(cacheKey(prompt), { value, expiresAt: Date.now() + CACHE_TTL_MS });
+}
+
+export function clearLlmCache(): void {
+  cache.clear();
+}
+
+const RETRIES = 2;
+const RETRY_DELAY_MS = 400;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Один вызов модели: кэш → до двух попыток с паузой → null.
+ * null не ошибка, а штатный путь: выше по стеку движок отвечает правилами.
+ */
 async function callLlm(prompt: string): Promise<string | null> {
   const current = provider();
-  if (current === "gemini") return callGemini(prompt);
-  if (current === "openai") return callOpenAi(prompt);
+  if (current === "none") return null;
+
+  const cached = cacheGet(prompt);
+  if (cached !== null) {
+    llmStats.cacheHits += 1;
+    return cached;
+  }
+
+  for (let attempt = 0; attempt <= RETRIES; attempt += 1) {
+    llmStats.calls += 1;
+    const raw = current === "gemini" ? await callGemini(prompt) : await callOpenAi(prompt);
+    if (raw !== null) {
+      cacheSet(prompt, raw);
+      return raw;
+    }
+    if (attempt < RETRIES) {
+      llmStats.retries += 1;
+      await sleep(RETRY_DELAY_MS * (attempt + 1));
+    }
+  }
+
+  llmStats.failures += 1;
+  logWarn("llm_unavailable", { provider: current, attempts: RETRIES + 1 });
   return null;
 }
 

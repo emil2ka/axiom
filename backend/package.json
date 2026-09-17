@@ -11,6 +11,8 @@
     "start": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
     "selftest": "tsx src/selftest.ts",
+    "e2e": "tsx src/e2e.ts",
+    "verify": "npm run typecheck && npm run selftest && npm run e2e",
     "sync": "node ../scripts/sync-shared.mjs"
   },
   "dependencies": {
