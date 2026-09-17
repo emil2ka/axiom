@@ -799,3 +799,39 @@ export function reparseFactValue(
   const cleaned = raw.trim();
   return { value: cleaned, display: cleaned };
 }
+
+/**
+ * Приводит факт памяти к текущим правилам разбора.
+ *
+ * Профиль лежит в localStorage и переживает обновления кода. Факты, записанные
+ * прежними версиями, могли сохранить значения, которые сегодняшний разбор уже
+ * не считает корректными: бюджет 10 из «10к», средний балл 3.8 по пятибалльной
+ * шкале там, где имелась в виду четырёхбалльная. Такой факт молча искажает
+ * рекомендации, оставаясь на вид нормальным чипом.
+ */
+export function normalizeStoredFact(item: MemoryFact): MemoryFact {
+  const parsed = reparseFactValue(item.field, item.display || item.value);
+  if (!parsed) return item;
+
+  const numericChanged = parsed.numeric !== item.numeric;
+  if (!numericChanged && parsed.value === item.value) return item;
+
+  return {
+    ...item,
+    value: parsed.value,
+    display: parsed.display,
+    numeric: parsed.numeric,
+    // Прежнее значение не теряем: память обязана помнить, что было.
+    history: numericChanged
+      ? [
+          { value: item.value, display: item.display, numeric: item.numeric, source: item.source, at: item.createdAt },
+          ...(item.history ?? []),
+        ].slice(0, 6)
+      : item.history,
+  };
+}
+
+/** Чинит весь сохранённый профиль разом. */
+export function normalizeStoredMemories(items: MemoryFact[]): MemoryFact[] {
+  return items.map(normalizeStoredFact);
+}

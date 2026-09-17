@@ -24,6 +24,7 @@ import {
   extractFacts,
   mergeFacts,
   nextQuestion,
+  normalizeStoredMemories,
   normalizeNumerals,
   rankingChurn,
   recommend,
@@ -1110,6 +1111,60 @@ const afterWipe = diagnose([]);
 check("на пустой памяти полнота 0%", afterWipe.completeness === 0, `${afterWipe.completeness}%`);
 check("и диагностика не выдумывает сильных сторон", afterWipe.strengths.length === 0, afterWipe.strengths.join(" | "));
 check("интервью снова начинает со знакомства", selectNextQuestion([], [], { now }).kind === "opener");
+
+console.log("\n[28] Профиль из localStorage переживает обновление правил");
+
+// Так факт выглядел, когда его записывала прежняя версия разбора.
+const stored = (field: MemoryFact["field"], value: string, display: string, numericValue?: number): MemoryFact => ({
+  id: `f-${field}`,
+  field,
+  label: FIELD_LABELS[field],
+  value,
+  display,
+  quote: "",
+  confidence: 0.9,
+  numeric: numericValue,
+  source: "manual",
+  createdAt: 1,
+});
+
+const migrated = normalizeStoredMemories([
+  stored("budget", "10к", "10к", 10),
+  stored("ielts", "15", "15", 15),
+  stored("gpa", "4.5/5", "4.5 из 5", 4.5),
+  stored("country", "Европа", "Европа"),
+  stored("interests", "IT и программирование", "IT и программирование"),
+]);
+const migratedField = (field: string) => migrated.find((item) => item.field === field);
+
+check("бюджет «10к» чинится до 10 000", migratedField("budget")?.numeric === 10000, String(migratedField("budget")?.numeric));
+check("и прежнее значение уходит в историю", migratedField("budget")?.history?.[0]?.display === "10к", migratedField("budget")?.history?.[0]?.display);
+check("невозможный IELTS теряет число", migratedField("ielts")?.numeric === undefined, String(migratedField("ielts")?.numeric));
+check("но текст пользователя остаётся", migratedField("ielts")?.display === "15");
+check("корректные факты не трогаются", migratedField("gpa")?.numeric === 4.5 && migratedField("gpa")?.history === undefined);
+check("нечисловые факты не трогаются", migratedField("country")?.value === "Европа" && migratedField("country")?.history === undefined);
+check("количество фактов не меняется", migrated.length === 5);
+
+// Починенный профиль должен работать во всём пути.
+let migrationBroke = false;
+try {
+  recommend(migrated);
+  diagnose(migrated);
+  buildRoadmap(migrated, null, { now });
+  selectNextQuestion(migrated, [], { now });
+} catch {
+  migrationBroke = true;
+}
+check("после миграции весь путь работает", !migrationBroke);
+check(
+  "и рекомендации считаются по исправленному бюджету",
+  recommend(migrated).recommendations.some((item) => item.budgetDeltaUsd !== null && item.budgetDeltaUsd > 0),
+  "при бюджете $10 хотя бы одна программа не может уложиться",
+);
+
+// Повторная миграция ничего не портит.
+const twice = normalizeStoredMemories(migrated);
+check("повторный прогон миграции идемпотентен", JSON.stringify(twice.map((item) => [item.value, item.numeric])) === JSON.stringify(migrated.map((item) => [item.value, item.numeric])));
 
 console.log(`\nИтог: ${passed} ok, ${failed} fail\n`);
 if (failed > 0) process.exit(1);

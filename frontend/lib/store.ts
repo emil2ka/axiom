@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { mergeFacts, reparseFactValue } from "@/lib/shared/engine";
+import { mergeFacts, normalizeStoredMemories, reparseFactValue } from "@/lib/shared/engine";
 import type { ChatMessage, MemoryField, MemoryFact } from "@/lib/shared/engine";
 
 export interface WhatIfState {
@@ -162,7 +162,21 @@ export const useAxiomStore = create<AxiomState>()(
     }),
     {
       name: "axiom-store-v1",
-      version: 1,
+      version: 2,
+      /**
+       * Профиль лежит в браузере и переживает обновления кода. Факты, записанные
+       * прежними версиями разбора, могли сохранить искажённые числа — бюджет 10
+       * вместо 10 000, средний балл не по той шкале. Прогоняем их через текущие
+       * правила, а прежние значения уводим в историю факта, ничего не теряя.
+       */
+      migrate: (persisted, version) => {
+        const state = persisted as Partial<AxiomState> | undefined;
+        if (!state || version >= 2) return persisted as AxiomState;
+        return {
+          ...state,
+          memories: normalizeStoredMemories(state.memories ?? []),
+        } as AxiomState;
+      },
     },
   ),
 );
