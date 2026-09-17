@@ -25,6 +25,7 @@ import {
   rankingChurn,
   recommend,
   reconcileEnrichment,
+  relevantPrograms,
   scoreProgram,
   totalPerYear,
   totalProgramCost,
@@ -936,6 +937,59 @@ check(
 const noTarget = buildRoadmap([], null, { now: today, programs: [] });
 check("без цели маршрут пуст", noTarget.steps.length === 0 && noTarget.targetProgram === null);
 check("и честно говорит почему", noTarget.paceNote.includes("Цель ещё не выбрана"), noTarget.paceNote);
+
+console.log("\n[24] Диагностика считает в рамках того, что человек назвал");
+
+const medicine = extractFacts("Хочу стать врачом в Европе, бюджет до $20k, IELTS 6.0, средний балл 4.3", { now });
+const medDiag = diagnose(medicine);
+const medScope = relevantPrograms(medicine);
+check("выборка сужена до направления", medScope.programs.length === 3, String(medScope.programs.length));
+check("и названа человеку понятно", medScope.label.includes("направлению"), medScope.label);
+check(
+  "цифры считаются от выборки, а не от всей базы",
+  medDiag.constraints.concat(medDiag.strengths).some((line) => line.includes("из 3 программ")),
+  medDiag.strengths.concat(medDiag.constraints).join(" | ").slice(0, 120),
+);
+check(
+  "и не обещают того, чего нет: «из 45» в цифрах покрытия больше не появляется",
+  !medDiag.strengths.concat(medDiag.constraints).some((line) => /покрывает \d+ из 45|открывает \d+ из 45/.test(line)),
+);
+check(
+  "узкий выбор назван ограничением",
+  medDiag.constraints.some((line) => line.includes("не проходит ни одна") || line.includes("выбор узкий")),
+  medDiag.constraints.join(" | ").slice(0, 120),
+);
+
+// Ноль покрытия не может быть сильной стороной.
+const impossible = diagnose(extractFacts("Хочу в Нидерланды на медицину, бюджет до $8k, IELTS 5.0", { now }));
+check(
+  "нулевое покрытие бюджета — ограничение, а не достижение",
+  impossible.constraints.some((line) => line.includes("покрывает 0 из")) &&
+    !impossible.strengths.some((line) => line.includes("покрывает 0 из")),
+  impossible.strengths.join(" | "),
+);
+check(
+  "в сильных сторонах нет строк с нулём",
+  !impossible.strengths.some((line) => /\b0 из \d+/.test(line)),
+  impossible.strengths.join(" | "),
+);
+
+// Широкий профиль по-прежнему получает нормальные сильные стороны.
+const wide = diagnose(extractFacts("Хочу в Европу, интересует IT, бюджет до $15k, IELTS 6.5, средний балл 4.5", { now }));
+check("широкому профилю сильные стороны остаются", wide.strengths.length >= 3, String(wide.strengths.length));
+check(
+  "и подтверждают, что вариантов много",
+  wide.strengths.some((line) => line.includes("По всем твоим условиям сразу проходит")),
+  wide.strengths.join(" | ").slice(0, 120),
+);
+
+// Диагностика не должна противоречить рекомендациям.
+const shownTop = recommend(medicine).recommendations.slice(0, 1)[0];
+check(
+  "топ-1 действительно по названному направлению",
+  shownTop.program.tags.includes("medicine"),
+  `${shownTop.program.id} (${shownTop.program.field})`,
+);
 
 console.log(`\nИтог: ${passed} ok, ${failed} fail\n`);
 if (failed > 0) process.exit(1);

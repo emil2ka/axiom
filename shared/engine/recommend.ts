@@ -664,3 +664,42 @@ export function diffRankings(base: Recommendation[], next: Recommendation[], top
 export function countOverBudget(recommendations: Recommendation[]): number {
   return recommendations.filter((item) => item.budgetDeltaUsd !== null && item.budgetDeltaUsd < 0).length;
 }
+
+/**
+ * Программы, релевантные тому, что человек назвал: направление и география.
+ *
+ * Считать «сколько программ в базе» бессмысленно, когда человек хочет
+ * медицину: 45 в базе, но по его направлению их три. Диагностика на общих
+ * числах успокаивала там, где нужно предупреждать, и противоречила тому, что
+ * он видел на экране рекомендаций.
+ */
+export function relevantPrograms(memories: MemoryFact[], programs: Program[] = PROGRAMS): {
+  programs: Program[];
+  /** Как назвать эту выборку человеку: «по твоему направлению», «в базе»… */
+  label: string;
+} {
+  const tags = getInterestTags(memories);
+  const countries = getCountries(memories);
+  const wantsEurope = countries.includes("Европа");
+
+  const byInterest = tags.length
+    ? programs.filter((program) => program.tags.some((tag) => tags.includes(tag)))
+    : programs;
+  const byBoth = countries.length
+    ? byInterest.filter(
+        (program) => countries.includes(program.country) || (wantsEurope && EUROPE_COUNTRIES.has(program.country)),
+      )
+    : byInterest;
+
+  // Если сужение обнулило выборку, отступаем на шаг назад: пустые проценты
+  // бесполезнее общих.
+  if (!byBoth.length && byInterest.length) {
+    return { programs: byInterest, label: "по твоему направлению" };
+  }
+  if (!byBoth.length) return { programs, label: "в базе" };
+
+  if (tags.length && countries.length) return { programs: byBoth, label: "по твоему направлению и географии" };
+  if (tags.length) return { programs: byBoth, label: "по твоему направлению" };
+  if (countries.length) return { programs: byBoth, label: "в выбранной географии" };
+  return { programs: byBoth, label: "в базе" };
+}
