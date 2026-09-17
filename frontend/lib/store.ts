@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { mergeFacts } from "@/lib/shared/engine";
+import { mergeFacts, reparseFactValue } from "@/lib/shared/engine";
 import type { ChatMessage, MemoryField, MemoryFact } from "@/lib/shared/engine";
 
 export interface WhatIfState {
@@ -57,14 +57,8 @@ interface AxiomState {
   resetAll: () => void;
 }
 
-const NUMERIC_FIELDS = new Set<MemoryField>(["budget", "ielts", "gpa"]);
 
-function parseNumericValue(field: MemoryField, raw: string): number | undefined {
-  if (!NUMERIC_FIELDS.has(field)) return undefined;
-  const cleaned = raw.replace(/[^\d.,]/g, "").replace(",", ".");
-  const value = Number.parseFloat(cleaned);
-  return Number.isFinite(value) ? value : undefined;
-}
+
 
 export const useAxiomStore = create<AxiomState>()(
   persist(
@@ -86,13 +80,16 @@ export const useAxiomStore = create<AxiomState>()(
         set((state) => ({
           memories: state.memories.map((item) => {
             if (item.id !== id) return item;
-            const value = rawValue.trim();
-            if (!value) return item;
+            const raw = rawValue.trim();
+            if (!raw) return item;
+            // Разбор общий с речью: иначе «10к» превращалось в бюджет $10.
+            const parsed = reparseFactValue(item.field, raw);
+            if (!parsed) return item;
             return {
               ...item,
-              value,
-              display: value,
-              numeric: parseNumericValue(item.field, value),
+              value: parsed.value,
+              display: parsed.display,
+              numeric: parsed.numeric,
               source: "manual",
               createdAt: Date.now(),
             };

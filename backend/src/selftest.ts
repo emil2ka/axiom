@@ -28,6 +28,7 @@ import {
   rankingChurn,
   recommend,
   reconcileEnrichment,
+  reparseFactValue,
   relevantPrograms,
   scoreProgram,
   totalPerYear,
@@ -1053,6 +1054,62 @@ check(
   "а распознанный факт по-прежнему подтверждается",
   composeAgentReply(extractFacts("Средний балл 4.5", { now }), someQuestion, "Средний балл 4.5").includes("4.5"),
 );
+
+console.log("\n[26] Правка чипа руками не ломает профиль");
+
+// Это шаг демо-сценария, поэтому мусор попадает сюда в первую очередь.
+const chip = (field: MemoryFact["field"], raw: string) => reparseFactValue(field, raw);
+
+check("«10к» — самый вероятный ввод — даёт 10 000, а не 10", chip("budget", "10к")?.numeric === 10000, String(chip("budget", "10к")?.numeric));
+check("«15k» латиницей тоже", chip("budget", "15k")?.numeric === 15000, String(chip("budget", "15k")?.numeric));
+check("«10 тысяч» словом", chip("budget", "10 тысяч")?.numeric === 10000);
+check("«пятнадцать тысяч» прописью", chip("budget", "пятнадцать тысяч")?.numeric === 15000);
+check("«до $10 000» как в подсказке", chip("budget", "до $10 000")?.numeric === 10000);
+check(
+  "лишние числа в строке не склеиваются",
+  chip("budget", "до 10 000 в год 2027")?.numeric === 10000,
+  String(chip("budget", "до 10 000 в год 2027")?.numeric),
+);
+
+// Невозможные значения не должны попадать в скоринг числом.
+for (const [field, raw] of [
+  ["budget", "0"],
+  ["budget", "999999999"],
+  ["budget", "abc"],
+  ["ielts", "15"],
+  ["ielts", "0"],
+  ["ielts", "не сдавал"],
+  ["gpa", "100"],
+] as const) {
+  check(`«${raw}» в поле ${field} не становится числом`, chip(field, raw)?.numeric === undefined, String(chip(field, raw)?.numeric));
+}
+check("но текст пользователя сохраняется", chip("budget", "abc")?.display === "abc");
+check("а корректные значения по-прежнему разбираются", chip("ielts", "6,5")?.numeric === 6.5 && chip("gpa", "3.9 из 4")?.numeric === 3.9);
+check("нечисловые поля просто нормализуются", chip("country", "  Германия  ")?.value === "Германия");
+check("пустой ввод отвергается", chip("budget", "   ") === null);
+
+console.log("\n[27] Удаление фактов на полпути");
+const fullProfile = extractFacts("Меня зовут Алия, 11 класс. Хочу в Европу, бюджет до $15k, IELTS 6.0, средний балл 4.5, интересует IT", { now });
+// Человек удаляет чипы один за другим — сервис не должен падать или врать.
+let shrinking = [...fullProfile];
+while (shrinking.length > 0) {
+  const before = shrinking.length;
+  shrinking = shrinking.slice(1);
+  let broke = false;
+  try {
+    recommend(shrinking);
+    diagnose(shrinking);
+    buildRoadmap(shrinking, null, { now });
+    selectNextQuestion(shrinking, [], { now });
+  } catch {
+    broke = true;
+  }
+  check(`после удаления факта (${before} → ${shrinking.length}) путь не ломается`, !broke);
+}
+const afterWipe = diagnose([]);
+check("на пустой памяти полнота 0%", afterWipe.completeness === 0, `${afterWipe.completeness}%`);
+check("и диагностика не выдумывает сильных сторон", afterWipe.strengths.length === 0, afterWipe.strengths.join(" | "));
+check("интервью снова начинает со знакомства", selectNextQuestion([], [], { now }).kind === "opener");
 
 console.log(`\nИтог: ${passed} ok, ${failed} fail\n`);
 if (failed > 0) process.exit(1);

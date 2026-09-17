@@ -737,3 +737,65 @@ export function knownLanguageNames(): string[] {
 export function knownInterestLabels(): string[] {
   return INTEREST_PATTERNS.map((item) => item.label);
 }
+
+/**
+ * Разбор значения, введённого руками при правке чипа памяти.
+ *
+ * Фронт использовал для этого свой примитивный парсер: он выдирал все цифры
+ * подряд, поэтому «10к» превращалось в бюджет $10, «до 10 000 в год 2027» —
+ * в $100 002 027, а IELTS можно было выставить 15. Правка чипа — это шаг
+ * демо-сценария, и мусор туда попадает в первую очередь.
+ *
+ * Здесь работают те же правила, что и для речи, плюс границы допустимого:
+ * один разбор на оба пути, без расхождений.
+ */
+export function reparseFactValue(
+  field: MemoryField,
+  raw: string,
+): { value: string; display: string; numeric?: number } | null {
+  const text = normalizeNumerals(raw.trim());
+  if (!text) return null;
+
+  if (field === "budget") {
+    // «10к» само по себе не содержит ни валюты, ни слова «бюджет», поэтому
+    // правила его не видят. Даём им недостающий контекст — это самый вероятный
+    // ввод при правке чипа, и он не должен превращаться в бюджет $10.
+    const money = findMoney(text) ?? findMoney(`бюджет до ${text}`);
+    if (money) {
+      return { value: formatUsd(money.amountUsd), display: `до ${formatUsd(money.amountUsd)}`, numeric: money.amountUsd };
+    }
+    // Голое число без валюты: в контексте поступления это доллары в год.
+    const bare = /(\d[\d\s]*)/.exec(text);
+    const amount = bare ? Number(bare[1].replace(/\s/g, "")) : NaN;
+    if (Number.isFinite(amount) && amount >= 100 && amount <= 500000) {
+      return { value: formatUsd(amount), display: `до ${formatUsd(amount)}`, numeric: amount };
+    }
+    return { value: raw.trim(), display: raw.trim() };
+  }
+
+  if (field === "ielts") {
+    const match = /(\d(?:[.,]\d)?)/.exec(text);
+    const score = match ? parseNumber(match[1]) : null;
+    if (score !== null && score >= 4 && score <= 9) {
+      return { value: score.toFixed(1), display: score.toFixed(1), numeric: score };
+    }
+    // Балл вне шкалы — это не балл. Сохраняем как текст, но без числа,
+    // иначе скоринг посчитает несуществующий уровень языка.
+    return { value: raw.trim(), display: raw.trim() };
+  }
+
+  if (field === "gpa") {
+    const gpa = findGpa(text) ?? findGpa(`средний балл ${text}`);
+    // «100» разбиралось как «1 из 5»: шаблон брал первую цифру длинного числа.
+    // Считаем разбор верным, только если он совпал с числом в самой строке.
+    const written = /(\d+(?:[.,]\d+)?)/.exec(text);
+    const writtenValue = written ? parseNumber(written[1]) : null;
+    if (gpa && (writtenValue === null || Math.abs(writtenValue - gpa.numeric) < 0.001)) {
+      return { value: gpa.value, display: gpa.display, numeric: gpa.numeric };
+    }
+    return { value: raw.trim(), display: raw.trim() };
+  }
+
+  const cleaned = raw.trim();
+  return { value: cleaned, display: cleaned };
+}

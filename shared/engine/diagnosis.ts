@@ -116,7 +116,11 @@ export function diagnose(memories: MemoryFact[], programs: Program[] = PROGRAMS)
     const gradeOk = gpaPercent === null || program.gpaMinPercent === null || program.gpaMinPercent <= gpaPercent;
     return affordable && languageOk && gradeOk;
   });
-  if (pool.length && viable.length <= 2) {
+  // Условий не названо — «проходит по всем условиям» бессмысленно и льстиво.
+  const statedConditions = [budget !== null, ielts !== null, gpaPercent !== null].filter(Boolean).length;
+  if (!statedConditions) {
+    // молчим: считать нечего
+  } else if (pool.length && viable.length <= 2) {
     constraints.push(
       viable.length === 0
         ? `По всем твоим условиям сразу не проходит ни одна программа ${where} — что-то придётся смягчить: бюджет, порог или географию`
