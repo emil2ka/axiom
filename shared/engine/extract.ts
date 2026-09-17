@@ -8,6 +8,7 @@ import type {
 } from "../types";
 import { FIELD_LABELS, splitValues } from "./profile";
 import { formatUsd } from "./format";
+import { normalizeNumerals } from "./numerals";
 
 interface Candidate {
   field: MemoryField;
@@ -156,7 +157,12 @@ function findMoney(text: string): MoneyMatch | null {
       numberRaw: m[1],
       suffix: m[2],
       currencyToken: "",
-    }))
+    })) ??
+    // «бюджет 15000» без валюты: в контексте поступления это доллары в год.
+    // Порог в 3000 отсекает случайные числа вроде года или балла.
+    tryMatch(new RegExp(`бюджет\\w*[^\\d]{0,15}(\\d{4,6})(?!\\s*(?:год|класс))`, "i"), (m) =>
+      Number(m[1]) >= 3000 ? { numberRaw: m[1], currencyToken: "usd" } : null,
+    )
   );
 }
 
@@ -170,14 +176,29 @@ interface IeltsMatch {
 }
 
 function findIelts(text: string): IeltsMatch | null {
-  const word = /ielts|айелтс|айлтс/i.exec(text);
-  const without = /без\s+(?:ielts|айелтс|айлтс)/i.exec(text);
+  const word = /ielts|айелтс|айэлтс|айлтс|аелтс/i.exec(text);
+  const without = /без\s+(?:ielts|айелтс|айэлтс|айлтс)/i.exec(text);
   if (!word && !without) return null;
   const anchor = word ?? without;
   if (!anchor) return null;
 
   const window = text.slice(anchor.index, anchor.index + 70);
+  // «айлтс шесть ноль» после нормализации даёт «айлтс 6 0» — это 6.0, а не 6.
+  const splitScore = /(\d)\s+(\d)(?!\d)/.exec(window);
   const numMatch = /(\d(?:[.,]\d)?)/.exec(window);
+  if (splitScore && Number(splitScore[1]) >= 4 && Number(splitScore[1]) <= 9 && Number(splitScore[2]) <= 9) {
+    const combined = Number(`${splitScore[1]}.${splitScore[2]}`);
+    if (combined >= 4 && combined <= 9) {
+      return {
+        value: combined.toFixed(1),
+        display: combined.toFixed(1),
+        numeric: combined,
+        quote: clipQuote(text, anchor.index, splitScore.index + splitScore[0].length),
+        index: anchor.index,
+        confidence: 0.88,
+      };
+    }
+  }
   if (numMatch) {
     const parsed = parseNumber(numMatch[1]);
     if (parsed !== null && parsed >= 4 && parsed <= 9) {
@@ -439,9 +460,12 @@ function makeId(field: MemoryField): string {
   return `f-${field}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
 }
 
-export function extractFacts(text: string, options: ExtractOptions = {}): MemoryFact[] {
+export function extractFacts(rawText: string, options: ExtractOptions = {}): MemoryFact[] {
   const source: MemorySource = options.source ?? "text";
   const now = options.now ?? new Date();
+  // Голосовой ввод отдаёт числа словами: «пятнадцать тысяч», «шесть с половиной».
+  // Нормализуем один раз, дальше все правила работают с привычными цифрами.
+  const text = normalizeNumerals(rawText);
   const candidates: Candidate[] = [];
 
   const add = (

@@ -193,6 +193,12 @@ const PROFILES: Profile[] = [
     expectations: [expectCountry(["Турция"], 1), topWithinBudget(2), topMatchesInterest(2)],
   },
   {
+    // Так реплика приходит из Web Speech: строчными и без пунктуации.
+    id: "voice-input",
+    says: "хочу поступить в европу бюджет до пятнадцати тысяч долларов в год айлтс шесть с половиной интересует программирование",
+    expectations: [topMatchesInterest(3), budgetIsNeverSilent(5), everyTopIsExplained(5), hasReachableOption(5)],
+  },
+  {
     id: "architecture",
     says: "Хочу на архитектуру, Европа, бюджет до $13k, IELTS 6.0, средний балл 4.4.",
     expectations: [topMatchesInterest(2), topWithinBudget(2), everyTopIsExplained(5)],
