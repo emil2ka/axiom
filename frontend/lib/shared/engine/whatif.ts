@@ -1,6 +1,7 @@
 import type { MemoryFact, RankDiff, RecommendResult, ScoreWeights, WhatIfParams, WhatIfResult } from "../types";
 import { pluralRu } from "./format";
-import { DEFAULT_WEIGHTS, recommend } from "./recommend";
+import { getPriority } from "./profile";
+import { DEFAULT_WEIGHTS, PRIORITY_LABEL_RU, recommend } from "./recommend";
 
 export interface WhatIfPreset {
   id: string;
@@ -126,7 +127,14 @@ export function applyWhatIf(memories: MemoryFact[], params: WhatIfParams): WhatI
   if (newOut !== baseOut) {
     summaryParts.push(`Программ вне бюджета: ${baseOut} → ${newOut}.`);
   }
-  if (!summaryParts.length) summaryParts.push("Рейтинг стабилен — при текущих приоритетах порядок не меняется.");
+  if (!summaryParts.length) {
+    const memoryPriority = getPriority(memories);
+    summaryParts.push(
+      memoryPriority
+        ? `Рейтинг не изменился: приоритет «${PRIORITY_LABEL_RU[memoryPriority]}» уже сохранён в памяти и учтён в основной выдаче.`
+        : "Рейтинг стабилен — при текущих приоритетах порядок не меняется.",
+    );
+  }
 
   return {
     recommendations: adjusted.recommendations,

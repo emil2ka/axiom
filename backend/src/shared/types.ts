@@ -13,6 +13,9 @@ export type MemoryField =
 
 export type MemorySource = "voice" | "text" | "manual" | "demo";
 
+/** Что для абитуриента важнее всего — извлекается из памяти и меняет веса скоринга. */
+export type PriorityKey = "country" | "budget" | "scholarship" | "ranking";
+
 export interface MemoryFact {
   id: string;
   field: MemoryField;
@@ -99,6 +102,12 @@ export interface Recommendation {
 export interface RecommendResult {
   recommendations: Recommendation[];
   engine: "rules" | "llm";
+  /** Веса, по которым фактически считался этот рейтинг (после учёта приоритета из памяти). */
+  weights?: ScoreWeights;
+  /** Приоритет, взятый из памяти и применённый к весам. null — приоритет не задан. */
+  appliedPriority?: PriorityKey | null;
+  /** Человекочитаемое объяснение, как приоритет из памяти изменил ранжирование. */
+  priorityNote?: string;
 }
 
 export interface WhatIfParams {

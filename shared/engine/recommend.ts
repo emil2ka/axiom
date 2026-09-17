@@ -1,4 +1,13 @@
-import type { Gap, MemoryFact, Program, Reason, RecommendResult, Recommendation, ScoreWeights } from "../types";
+import type {
+  Gap,
+  MemoryFact,
+  PriorityKey,
+  Program,
+  Reason,
+  RecommendResult,
+  Recommendation,
+  ScoreWeights,
+} from "../types";
 import { formatDateRu, formatUsd, parseIso } from "./format";
 import { getBudget, getCountries, getIelts, getInterestTags, getInterests, getIntakeYear, getPriority } from "./profile";
 import programsData from "../data/programs.json";
@@ -35,6 +44,86 @@ export const EUROPE_COUNTRIES = new Set([
   "Франция",
 ]);
 
+/**
+ * Приоритет из памяти («стипендия важнее страны») — это не декоративный чип,
+ * а множители к весам скоринга. Каждый множитель проверяется self-тестом:
+ * см. раздел [8] в backend/src/selftest.ts.
+ */
+export const PRIORITY_WEIGHT_MULTIPLIERS: Record<PriorityKey, Partial<Record<keyof ScoreWeights, number>>> = {
+  // «Важнее страна» — география почти отсекающий критерий, цена отходит на второй план.
+  country: { country: 2.6, budget: 0.8, scholarship: 0.7 },
+  // «Важнее бюджет» — стоимость решает, стипендия учитывается слабее (её ещё нужно выиграть).
+  budget: { budget: 2.4, scholarship: 0.7, country: 0.75 },
+  // «Важнее стипендия» — полное покрытие перевешивает страну.
+  scholarship: { scholarship: 3.5, country: 0.4, budget: 0.9 },
+  // «Важнее рейтинг» — в датасете пока нет поля рейтинга, честно не трогаем веса.
+  ranking: {},
+};
+
+export const PRIORITY_LABEL_RU: Record<PriorityKey, string> = {
+  country: "страна",
+  budget: "бюджет",
+  scholarship: "стипендия",
+  ranking: "рейтинг вуза",
+};
+
+export function normalizeWeights(weights: ScoreWeights): ScoreWeights {
+  const sum =
+    weights.budget + weights.country + weights.ielts + weights.field + weights.scholarship + weights.timing;
+  if (sum <= 0) return { ...DEFAULT_WEIGHTS };
+  return {
+    budget: weights.budget / sum,
+    country: weights.country / sum,
+    ielts: weights.ielts / sum,
+    field: weights.field / sum,
+    scholarship: weights.scholarship / sum,
+    timing: weights.timing / sum,
+  };
+}
+
+/** Применяет приоритет из памяти к весам и нормализует сумму к 1. */
+export function applyPriorityWeights(base: ScoreWeights, priority: PriorityKey | null): ScoreWeights {
+  if (!priority) return normalizeWeights(base);
+  const multipliers = PRIORITY_WEIGHT_MULTIPLIERS[priority];
+  const boosted: ScoreWeights = {
+    budget: base.budget * (multipliers.budget ?? 1),
+    country: base.country * (multipliers.country ?? 1),
+    ielts: base.ielts * (multipliers.ielts ?? 1),
+    field: base.field * (multipliers.field ?? 1),
+    scholarship: base.scholarship * (multipliers.scholarship ?? 1),
+    timing: base.timing * (multipliers.timing ?? 1),
+  };
+  return normalizeWeights(boosted);
+}
+
+/** Объясняет пользователю, что именно приоритет из памяти сделал с рейтингом. */
+export function describePriorityEffect(priority: PriorityKey | null): string {
+  if (!priority) return "Приоритет не задан — критерии взвешены сбалансированно.";
+  if (priority === "ranking") {
+    return "Приоритет «рейтинг вуза» сохранён в памяти, но в демо-датасете нет поля рейтинга — ранжирование им пока не меняется.";
+  }
+  const multipliers = PRIORITY_WEIGHT_MULTIPLIERS[priority];
+  const raised = Object.entries(multipliers)
+    .filter(([, value]) => (value ?? 1) > 1)
+    .map(([key]) => FIELD_WEIGHT_LABEL[key as keyof ScoreWeights]);
+  const lowered = Object.entries(multipliers)
+    .filter(([, value]) => (value ?? 1) < 1)
+    .map(([key]) => FIELD_WEIGHT_LABEL[key as keyof ScoreWeights]);
+  const parts = [`Из памяти взят приоритет «${PRIORITY_LABEL_RU[priority]}».`];
+  if (raised.length) parts.push(`Вес критерия ${raised.join(", ")} повышен.`);
+  if (lowered.length) parts.push(`Вес критерия ${lowered.join(", ")} понижен.`);
+  return parts.join(" ");
+}
+
+const FIELD_WEIGHT_LABEL: Record<keyof ScoreWeights, string> = {
+  budget: "«бюджет»",
+  country: "«страна»",
+  ielts: "«IELTS»",
+  field: "«направление»",
+  scholarship: "«стипендия»",
+  timing: "«сроки»",
+};
+
 export interface ScoreOverrides {
   budget?: number | null;
   ielts?: number | null;
@@ -47,7 +136,7 @@ export interface ScoreContext {
   ielts: number | null;
   interestTags: string[];
   interestLabels: string[];
-  priority: string | null;
+  priority: PriorityKey | null;
   intakeYear: number | null;
   weights: ScoreWeights;
 }
@@ -223,6 +312,10 @@ function scoreComponents(program: Program, ctx: ScoreContext): ScoredParts {
     });
   }
 
+  // Приоритет из памяти — не просто вес, а видимое объяснение в карточке программы.
+  const priorityReason = buildPriorityReason(program, ctx, { budgetComponent, countryComponent });
+  if (priorityReason) reasons.push(priorityReason);
+
   return {
     components: {
       budget: budgetComponent,
@@ -235,6 +328,56 @@ function scoreComponents(program: Program, ctx: ScoreContext): ScoredParts {
     reasons,
     gaps,
   };
+}
+
+/**
+ * Формирует причину, привязанную к факту «Главный приоритет» из памяти.
+ * Вес намеренно высокий, чтобы объяснение попало в топ-4 причин карточки —
+ * пользователь должен видеть, что его собственная фраза изменила выдачу.
+ */
+function buildPriorityReason(
+  program: Program,
+  ctx: ScoreContext,
+  components: { budgetComponent: number; countryComponent: number },
+): Reason | null {
+  if (!ctx.priority) return null;
+  const boost = ctx.weights[ctx.priority === "ranking" ? "field" : ctx.priority] ?? 0;
+
+  if (ctx.priority === "scholarship") {
+    if (program.scholarship === "full") {
+      return {
+        text: `Приоритет «стипендия» из твоей памяти: здесь полное покрытие — ${program.scholarshipNote}`,
+        weight: boost * 1.2,
+        field: "priority",
+      };
+    }
+    if (program.scholarship === "partial") {
+      return {
+        text: `Приоритет «стипендия»: частичное покрытие — ${program.scholarshipNote}`,
+        weight: boost * 0.8,
+        field: "priority",
+      };
+    }
+    return null;
+  }
+
+  if (ctx.priority === "budget" && components.budgetComponent >= 0.75 && ctx.budget) {
+    return {
+      text: `Приоритет «бюджет» из твоей памяти: ${formatUsd(totalPerYear(program))}/год укладывается в ${formatUsd(ctx.budget)}`,
+      weight: boost * 1.2,
+      field: "priority",
+    };
+  }
+
+  if (ctx.priority === "country" && components.countryComponent >= 1) {
+    return {
+      text: `Приоритет «страна» из твоей памяти: ${program.country} — ровно твой регион`,
+      weight: boost * 1.2,
+      field: "priority",
+    };
+  }
+
+  return null;
 }
 
 export function scoreProgram(program: Program, ctx: ScoreContext): Omit<Recommendation, "rank"> {
@@ -267,17 +410,36 @@ export function scoreProgram(program: Program, ctx: ScoreContext): Omit<Recommen
 
 export interface RecommendOptions {
   limit?: number;
+  /** Явные веса (What If). Если заданы — приоритет из памяти к ним НЕ применяется. */
   weights?: ScoreWeights;
   overrides?: ScoreOverrides;
   programs?: Program[];
+  /** Отключить влияние приоритета из памяти — нужно для честного сравнения «до/после». */
+  ignorePriority?: boolean;
 }
 
 export function recommend(memories: MemoryFact[], options: RecommendOptions = {}): RecommendResult {
   const programs = options.programs ?? PROGRAMS;
-  const ctx = buildContext(memories, options.weights ?? DEFAULT_WEIGHTS, options.overrides ?? {});
+  const memoryPriority = options.ignorePriority ? null : getPriority(memories);
+
+  // Явные веса (слайдеры What If) всегда побеждают приоритет из памяти:
+  // пользователь в этот момент осознанно перевешивает критерии руками.
+  const weights = options.weights ?? applyPriorityWeights(DEFAULT_WEIGHTS, memoryPriority);
+
+  const ctx = buildContext(memories, weights, options.overrides ?? {});
+  if (options.ignorePriority) ctx.priority = null;
+
   const scored = programs.map((program) => scoreProgram(program, ctx));
   scored.sort((a, b) => b.score - a.score || a.totalPerYearUsd - b.totalPerYearUsd);
   const limited = options.limit ? scored.slice(0, options.limit) : scored;
   const recommendations: Recommendation[] = limited.map((item, index) => ({ ...item, rank: index + 1 }));
-  return { recommendations, engine: "rules" };
+
+  const appliedPriority = options.weights ? null : memoryPriority;
+  return {
+    recommendations,
+    engine: "rules",
+    weights,
+    appliedPriority,
+    priorityNote: describePriorityEffect(appliedPriority),
+  };
 }

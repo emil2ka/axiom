@@ -1,6 +1,8 @@
 import {
+  DEFAULT_WEIGHTS,
   PROGRAMS,
   WHATIF_PRESETS,
+  applyPriorityWeights,
   applyWhatIf,
   buildRoadmap,
   diagnose,
@@ -80,13 +82,23 @@ check("лимит работает", limited.recommendations.length === 3);
 
 console.log("\n[5] What If");
 const scholarshipPreset = WHATIF_PRESETS.find((preset) => preset.id === "scholarship-first");
-const baseAalto = base.recommendations.find((item) => item.program.id === "aalto-sci");
-const wf = applyWhatIf(facts, scholarshipPreset!.params);
+// База уже учитывает приоритет из памяти, поэтому движение пресета проверяем
+// на профиле без факта «приоритет» — иначе сравнивали бы одно и то же с самим собой.
+const neutralFacts = facts.filter((item) => item.field !== "priority");
+const neutralBase = recommend(neutralFacts);
+const neutralAalto = neutralBase.recommendations.find((item) => item.program.id === "aalto-sci");
+const wf = applyWhatIf(neutralFacts, scholarshipPreset!.params);
 const wfAalto = wf.recommendations.find((item) => item.program.id === "aalto-sci");
 check("пресет найден", scholarshipPreset !== undefined);
-check("программа с полной стипендией поднимается", (wfAalto?.rank ?? 99) <= (baseAalto?.rank ?? 0), `${baseAalto?.rank} → ${wfAalto?.rank}`);
+check("программа с полной стипендией поднимается", (wfAalto?.rank ?? 99) <= (neutralAalto?.rank ?? 0), `${neutralAalto?.rank} → ${wfAalto?.rank}`);
 check("summary заполнен", wf.summary.length > 10, wf.summary);
 check("diff содержит изменения", wf.diff.moved.length + wf.diff.entered.length > 0);
+const wfSamePriority = applyWhatIf(facts, scholarshipPreset!.params);
+check(
+  "пресет, совпавший с памятью, честно сообщает что уже учтён",
+  wfSamePriority.summary.includes("уже сохранён в памяти") || wfSamePriority.diff.moved.length > 0,
+  wfSamePriority.summary,
+);
 const baseOut = base.recommendations.filter((item) => (item.budgetDeltaUsd ?? 0) < 0).length;
 const wf10k = applyWhatIf(facts, { budget: 10000, countryWeight: 1, budgetWeight: 1, scholarshipWeight: 1 });
 const newOut = wf10k.recommendations.filter((item) => (item.budgetDeltaUsd ?? 0) < 0).length;
@@ -120,6 +132,69 @@ check("полнота профиля ≥ 80%", diag.completeness >= 80, `${diag.
 check("сильные стороны ≥ 3", diag.strengths.length >= 3, diag.strengths.join(" | "));
 check("ограничения ≥ 1", diag.constraints.length >= 1, diag.constraints.join(" | "));
 check("цель сформулирована", diag.goal.length > 20, diag.goal);
+
+console.log("\n[8] Приоритет из памяти управляет ранжированием");
+const noPriority = recommend(neutralFacts);
+const withScholarship = recommend(
+  mergeFacts(neutralFacts, extractFacts("Стипендия важнее страны", { now })),
+);
+const withCountry = recommend(
+  mergeFacts(neutralFacts, extractFacts("Страна важнее стипендии", { now })),
+);
+
+check("без приоритета appliedPriority = null", noPriority.appliedPriority === null, String(noPriority.appliedPriority));
+check("приоритет «Стипендия» распознан движком", withScholarship.appliedPriority === "scholarship", String(withScholarship.appliedPriority));
+check("приоритет «Страна» распознан движком", withCountry.appliedPriority === "country", String(withCountry.appliedPriority));
+
+check(
+  "вес критерия «стипендия» вырос относительно базового",
+  (withScholarship.weights?.scholarship ?? 0) > (noPriority.weights?.scholarship ?? 1),
+  `${noPriority.weights?.scholarship?.toFixed(3)} → ${withScholarship.weights?.scholarship?.toFixed(3)}`,
+);
+check(
+  "вес критерия «страна» при этом упал",
+  (withScholarship.weights?.country ?? 1) < (noPriority.weights?.country ?? 0),
+  `${noPriority.weights?.country?.toFixed(3)} → ${withScholarship.weights?.country?.toFixed(3)}`,
+);
+check(
+  "веса всегда нормализованы к 1",
+  [noPriority, withScholarship, withCountry].every((result) => {
+    const w = result.weights;
+    if (!w) return false;
+    const sum = w.budget + w.country + w.ielts + w.field + w.scholarship + w.timing;
+    return Math.abs(sum - 1) < 1e-9;
+  }),
+);
+
+const rankOf = (result: typeof noPriority, id: string): number =>
+  result.recommendations.find((item) => item.program.id === id)?.rank ?? 99;
+const fullScholarshipIds = PROGRAMS.filter((program) => program.scholarship === "full").map((program) => program.id);
+check(
+  "«стипендия важнее» реально двигает программы с полным покрытием вверх",
+  fullScholarshipIds.some((id) => rankOf(withScholarship, id) < rankOf(noPriority, id)),
+  fullScholarshipIds.map((id) => `${id}: ${rankOf(noPriority, id)} → ${rankOf(withScholarship, id)}`).join(", "),
+);
+check(
+  "смена приоритета меняет сам порядок выдачи, а не только веса",
+  withScholarship.recommendations.map((item) => item.program.id).join(",") !==
+    withCountry.recommendations.map((item) => item.program.id).join(","),
+);
+check(
+  "карточка объясняет решение ссылкой на факт «приоритет»",
+  withScholarship.recommendations.slice(0, 5).some((item) => item.reasons.some((reason) => reason.field === "priority")),
+  withScholarship.recommendations[0]?.reasons.map((reason) => reason.field).join(", "),
+);
+check("priorityNote читаем человеком", (withScholarship.priorityNote ?? "").includes("стипендия"), withScholarship.priorityNote);
+check(
+  "ignorePriority отключает влияние памяти",
+  recommend(facts, { ignorePriority: true }).recommendations.map((item) => item.program.id).join(",") ===
+    noPriority.recommendations.map((item) => item.program.id).join(","),
+);
+check(
+  "приоритет «рейтинг» честно не меняет веса (нет данных в датасете)",
+  JSON.stringify(applyPriorityWeights(DEFAULT_WEIGHTS, "ranking")) ===
+    JSON.stringify(applyPriorityWeights(DEFAULT_WEIGHTS, null)),
+);
 
 console.log(`\nИтог: ${passed} ok, ${failed} fail\n`);
 if (failed > 0) process.exit(1);

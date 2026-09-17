@@ -1,4 +1,4 @@
-import type { MemoryFact, MemoryField } from "../types";
+import type { MemoryFact, MemoryField, PriorityKey } from "../types";
 
 export const FIELD_LABELS: Record<MemoryField, string> = {
   name: "Имя",
@@ -95,7 +95,7 @@ export function getIntakeYear(memories: MemoryFact[]): number | null {
   return match ? Number(match[1]) : null;
 }
 
-export function getPriority(memories: MemoryFact[]): "country" | "budget" | "scholarship" | "ranking" | null {
+export function getPriority(memories: MemoryFact[]): PriorityKey | null {
   const value = factValue(memories, "priority");
   if (!value) return null;
   const lower = value.toLowerCase();

@@ -12,7 +12,7 @@ import {
   getIntakeYear,
   getPriority,
 } from "./profile";
-import { PROGRAMS, totalPerYear } from "./recommend";
+import { PROGRAMS, describePriorityEffect, totalPerYear } from "./recommend";
 
 const PRIORITY_LABEL: Record<string, string> = {
   country: "страна",
@@ -73,7 +73,9 @@ export function diagnose(memories: MemoryFact[], programs: Program[] = PROGRAMS)
   }
 
   if (priority) {
-    strengths.push(`Приоритет зафиксирован: ${PRIORITY_LABEL[priority] ?? priority} — учтён в ранжировании`);
+    strengths.push(`Приоритет «${PRIORITY_LABEL[priority] ?? priority}»: ${describePriorityEffect(priority)}`);
+  } else {
+    constraints.push("Главный приоритет не назван — критерии взвешены поровну, выдача менее заточена под тебя");
   }
 
   const goalParts: string[] = ["Бакалавриат"];
