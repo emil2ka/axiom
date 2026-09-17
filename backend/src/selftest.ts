@@ -9,6 +9,7 @@ import {
   detectConflicts,
   diagnose,
   estimateImpact,
+  getGpaPercent,
   extractFacts,
   mergeFacts,
   nextQuestion,
@@ -166,7 +167,7 @@ check(
   [noPriority, withScholarship, withCountry].every((result) => {
     const w = result.weights;
     if (!w) return false;
-    const sum = w.budget + w.country + w.ielts + w.field + w.scholarship + w.timing;
+    const sum = w.budget + w.country + w.ielts + w.field + w.scholarship + w.timing + w.gpa;
     return Math.abs(sum - 1) < 1e-9;
   }),
 );
@@ -231,7 +232,7 @@ check(
   estimateImpact(afterIntro, "country") > estimateImpact(afterIntro, "gpa"),
   `country=${estimateImpact(afterIntro, "country").toFixed(3)} gpa=${estimateImpact(afterIntro, "gpa").toFixed(3)}`,
 );
-check("GPA честно оценён как не влияющий на рейтинг", estimateImpact(afterIntro, "gpa") === 0);
+check("GPA теперь влияет на рейтинг (раньше был мёртвым фактом)", estimateImpact(afterIntro, "gpa") > 0, String(estimateImpact(afterIntro, "gpa").toFixed(3)));
 check(
   "польза всегда в диапазоне 0..1",
   (["country", "budget", "ielts", "interests", "priority", "gpa"] as const).every((field) => {
@@ -279,6 +280,64 @@ check("непротиворечивый профиль не выдумывает
 check(
   "старый вызов nextQuestion(ids) не сломан",
   nextQuestion([]) === INTERVIEW_QUESTIONS[0] && nextQuestion(["intro"])?.id === "country",
+);
+
+console.log("\n[11] Средний балл: шкала и влияние на выдачу");
+const gpa38 = extractFacts("GPA 3.8", { now });
+check("«GPA 3.8» читается по 4-балльной шкале", byField(gpa38, "gpa")?.value === "3.8/4", byField(gpa38, "gpa")?.value);
+check("и показывается пользователю корректно", byField(gpa38, "gpa")?.display === "3.8 из 4", byField(gpa38, "gpa")?.display);
+const gpa45 = extractFacts("Средний балл 4.5", { now });
+check("«средний балл 4.5» — по 5-балльной", byField(gpa45, "gpa")?.value === "4.5/5", byField(gpa45, "gpa")?.value);
+const gpaExplicit = extractFacts("Средний балл 8 из 10", { now });
+check("явная шкала уважается", byField(gpaExplicit, "gpa")?.value === "8/10", byField(gpaExplicit, "gpa")?.value);
+
+check("3.8 из 4 → 95%", getGpaPercent(gpa38) === 95, String(getGpaPercent(gpa38)));
+check("4.0 из 5 → 80%", getGpaPercent(extractFacts("Средний балл 4.0", { now })) === 80, String(getGpaPercent(extractFacts("Средний балл 4.0", { now }))));
+check(
+  "отличник по 4-балльной больше не проигрывает середняку по 5-балльной",
+  (getGpaPercent(gpa38) ?? 0) > (getGpaPercent(extractFacts("Средний балл 4.0", { now })) ?? 0),
+);
+
+const baseNoGpa = extractFacts("Хочу в Европу, бюджет до $15k, интересует IT, IELTS 6.5", { now });
+const weak = recommend(mergeFacts(baseNoGpa, extractFacts("Средний балл 3.5", { now })));
+const strong = recommend(mergeFacts(baseNoGpa, extractFacts("Средний балл 4.9", { now })));
+check(
+  "средний балл меняет порядок выдачи",
+  weak.recommendations.map((item) => item.program.id).join(",") !==
+    strong.recommendations.map((item) => item.program.id).join(","),
+);
+const aaltoWeak = weak.recommendations.find((item) => item.program.id === "aalto-sci");
+check(
+  "отборная программа даёт gap при низком балле",
+  aaltoWeak?.gaps.some((gap) => gap.text.includes("среднему баллу")) === true,
+  aaltoWeak?.gaps.map((gap) => gap.text).join(" | "),
+);
+const aaltoStrong = strong.recommendations.find((item) => item.program.id === "aalto-sci");
+check(
+  "при высоком балле появляется причина, а не пробел",
+  aaltoStrong?.reasons.some((reason) => reason.field === "gpa") === true,
+  aaltoStrong?.reasons.map((reason) => reason.field).join(", "),
+);
+check(
+  "высокий балл поднимает отборную программу",
+  (aaltoStrong?.rank ?? 99) < (aaltoWeak?.rank ?? 0),
+  `${aaltoWeak?.rank} → ${aaltoStrong?.rank}`,
+);
+check(
+  "маршрут добавляет шаг «подтянуть балл», когда он ниже порога",
+  buildRoadmap(mergeFacts(baseNoGpa, extractFacts("Средний балл 3.5", { now })), PROGRAMS.find((program) => program.id === "aalto-sci") ?? null)
+    .steps.some((step) => step.id.endsWith("-gpa-up")),
+);
+check(
+  "и не добавляет его, когда балл проходит",
+  !buildRoadmap(mergeFacts(baseNoGpa, extractFacts("Средний балл 4.9", { now })), PROGRAMS.find((program) => program.id === "aalto-sci") ?? null)
+    .steps.some((step) => step.id.endsWith("-gpa-up")),
+);
+check("у всех программ проставлен порог или явный null", PROGRAMS.every((program) => program.gpaMinPercent === null || (program.gpaMinPercent > 0 && program.gpaMinPercent <= 100)));
+check(
+  "диагностика сравнивает баллы в процентах, а не в сырых числах",
+  diagnose(gpa38).strengths.some((item) => item.includes("95%")),
+  diagnose(gpa38).strengths.join(" | "),
 );
 
 console.log(`\nИтог: ${passed} ok, ${failed} fail\n`);

@@ -56,6 +56,8 @@ export interface Program {
   durationYears: number;
   language: string;
   ieltsMin: number | null;
+  /** Минимальный средний балл аттестата в процентах от максимума шкалы (80 = 4.0 из 5). */
+  gpaMinPercent: number | null;
   tuitionPerYearUsd: number;
   livingPerYearUsd: number;
   scholarship: ScholarshipLevel;
@@ -74,6 +76,7 @@ export interface ScoreWeights {
   field: number;
   scholarship: number;
   timing: number;
+  gpa: number;
 }
 
 export interface Reason {

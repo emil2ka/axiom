@@ -9,18 +9,28 @@ import type {
   ScoreWeights,
 } from "../types";
 import { formatDateRu, formatUsd, parseIso } from "./format";
-import { getBudget, getCountries, getIelts, getInterestTags, getInterests, getIntakeYear, getPriority } from "./profile";
+import {
+  getBudget,
+  getCountries,
+  getGpaPercent,
+  getIelts,
+  getInterestTags,
+  getInterests,
+  getIntakeYear,
+  getPriority,
+} from "./profile";
 import programsData from "../data/programs.json";
 
 export const PROGRAMS = programsData as unknown as Program[];
 
 export const DEFAULT_WEIGHTS: ScoreWeights = {
-  budget: 0.25,
-  country: 0.18,
-  ielts: 0.15,
-  field: 0.27,
-  scholarship: 0.1,
-  timing: 0.05,
+  budget: 0.23,
+  country: 0.17,
+  ielts: 0.14,
+  field: 0.25,
+  scholarship: 0.09,
+  timing: 0.04,
+  gpa: 0.08,
 };
 
 export const EUROPE_COUNTRIES = new Set([
@@ -69,7 +79,13 @@ export const PRIORITY_LABEL_RU: Record<PriorityKey, string> = {
 
 export function normalizeWeights(weights: ScoreWeights): ScoreWeights {
   const sum =
-    weights.budget + weights.country + weights.ielts + weights.field + weights.scholarship + weights.timing;
+    weights.budget +
+    weights.country +
+    weights.ielts +
+    weights.field +
+    weights.scholarship +
+    weights.timing +
+    weights.gpa;
   if (sum <= 0) return { ...DEFAULT_WEIGHTS };
   return {
     budget: weights.budget / sum,
@@ -78,6 +94,7 @@ export function normalizeWeights(weights: ScoreWeights): ScoreWeights {
     field: weights.field / sum,
     scholarship: weights.scholarship / sum,
     timing: weights.timing / sum,
+    gpa: weights.gpa / sum,
   };
 }
 
@@ -92,6 +109,7 @@ export function applyPriorityWeights(base: ScoreWeights, priority: PriorityKey |
     field: base.field * (multipliers.field ?? 1),
     scholarship: base.scholarship * (multipliers.scholarship ?? 1),
     timing: base.timing * (multipliers.timing ?? 1),
+    gpa: base.gpa * (multipliers.gpa ?? 1),
   };
   return normalizeWeights(boosted);
 }
@@ -122,12 +140,14 @@ const FIELD_WEIGHT_LABEL: Record<keyof ScoreWeights, string> = {
   field: "«направление»",
   scholarship: "«стипендия»",
   timing: "«сроки»",
+  gpa: "«успеваемость»",
 };
 
 export interface ScoreOverrides {
   budget?: number | null;
   ielts?: number | null;
   countries?: string[] | null;
+  gpaPercent?: number | null;
 }
 
 export interface ScoreContext {
@@ -136,6 +156,7 @@ export interface ScoreContext {
   ielts: number | null;
   interestTags: string[];
   interestLabels: string[];
+  gpaPercent: number | null;
   priority: PriorityKey | null;
   intakeYear: number | null;
   weights: ScoreWeights;
@@ -149,12 +170,14 @@ export function buildContext(
   const budget = overrides.budget !== undefined ? overrides.budget : getBudget(memories);
   const ielts = overrides.ielts !== undefined ? overrides.ielts : getIelts(memories);
   const countries = overrides.countries !== undefined && overrides.countries !== null ? overrides.countries : getCountries(memories);
+  const gpaPercent = overrides.gpaPercent !== undefined ? overrides.gpaPercent : getGpaPercent(memories);
   return {
     budget,
     countries,
     ielts,
     interestTags: getInterestTags(memories),
     interestLabels: getInterests(memories),
+    gpaPercent,
     priority: getPriority(memories),
     intakeYear: getIntakeYear(memories),
     weights,
@@ -312,6 +335,42 @@ function scoreComponents(program: Program, ctx: ScoreContext): ScoredParts {
     });
   }
 
+  let gpaComponent = 0.6;
+  if (program.gpaMinPercent !== null) {
+    if (ctx.gpaPercent === null) {
+      gpaComponent = 0.5;
+      gaps.push({
+        text: `Нужен средний балл от ${program.gpaMinPercent}% — ты не указал успеваемость`,
+        severity: "low",
+      });
+    } else if (ctx.gpaPercent >= program.gpaMinPercent) {
+      gpaComponent = 1;
+      // Чем выше планка, тем ценнее как объяснение то, что ты её прошёл:
+      // пройти 88% — сильный сигнал, пройти 70% — почти ничего не значит.
+      const selectivity = 1 + Math.max(0, (program.gpaMinPercent - 70) / 20);
+      reasons.push({
+        text: `Твой средний балл ${ctx.gpaPercent}% проходит порог ${program.gpaMinPercent}%`,
+        weight: w.gpa * selectivity,
+        field: "gpa",
+      });
+    } else if (ctx.gpaPercent >= program.gpaMinPercent - 5) {
+      gpaComponent = 0.5;
+      gaps.push({
+        text: `До порога по среднему баллу не хватает ${program.gpaMinPercent - ctx.gpaPercent} п.п. (нужно ${program.gpaMinPercent}%)`,
+        severity: "medium",
+      });
+    } else {
+      gpaComponent = 0.15;
+      gaps.push({
+        text: `Порог по среднему баллу ${program.gpaMinPercent}%, у тебя ${ctx.gpaPercent}% — программа отборная`,
+        severity: "high",
+      });
+    }
+  } else if (ctx.gpaPercent !== null) {
+    // Порога нет — успеваемость не мешает и не помогает, оценку не искажаем.
+    gpaComponent = 1;
+  }
+
   // Приоритет из памяти — не просто вес, а видимое объяснение в карточке программы.
   const priorityReason = buildPriorityReason(program, ctx, { budgetComponent, countryComponent });
   if (priorityReason) reasons.push(priorityReason);
@@ -324,6 +383,7 @@ function scoreComponents(program: Program, ctx: ScoreContext): ScoredParts {
       field: fieldComponent,
       scholarship: scholarshipComponent,
       timing: timingComponent,
+      gpa: gpaComponent,
     },
     reasons,
     gaps,
@@ -390,7 +450,8 @@ export function scoreProgram(program: Program, ctx: ScoreContext): Omit<Recommen
     components.ielts * weights.ielts +
     components.field * weights.field +
     components.scholarship * weights.scholarship +
-    components.timing * weights.timing;
+    components.timing * weights.timing +
+    components.gpa * weights.gpa;
   const score = Math.round((weighted / weightSum) * 100);
   const budgetDelta = ctx.budget ? ctx.budget - totalPerYear(program) : null;
 

@@ -205,21 +205,39 @@ interface GpaMatch {
   index: number;
 }
 
+/**
+ * Шкала оценки не всегда названа вслух, но без неё факт бессмыслен:
+ * 3.8 GPA — это отличник по 4-балльной шкале, а 3.8 из 5 — середняк.
+ * Если шкалу не сказали, выводим её из формулировки: «GPA» — международная
+ * 4-балльная, «средний балл»/«аттестат» — постсоветская 5-балльная.
+ */
+function inferGpaScale(keyword: string, numeric: number): number {
+  const isGpaWord = /gpa/i.test(keyword);
+  if (isGpaWord) return numeric > 4 ? 5 : 4;
+  return numeric > 5 ? 10 : 5;
+}
+
 function findGpa(text: string): GpaMatch | null {
   const contextual =
-    /(?:gpa|средн[а-яё]*\s*балл|аттестат[а-яё]*|успеваемост[а-яё]*|оценк[а-яё]*)[^\d]{0,14}(\d(?:[.,]\d{1,2})?)(?:\s*(?:\/|из)\s*(5|4|12))?/i.exec(
+    /(gpa|средн[а-яё]*\s*балл|аттестат[а-яё]*|успеваемост[а-яё]*|оценк[а-яё]*)[^\d]{0,14}(\d(?:[.,]\d{1,2})?)(?:\s*(?:\/|из)\s*(4|5|10|12|100))?/i.exec(
       text,
     );
-  const standalone = /(\d(?:[.,]\d{1,2})?)\s*(?:\/|из)\s*(5|4|12)(?!\d)/i.exec(text);
+  const standalone = /(\d(?:[.,]\d{1,2})?)\s*(?:\/|из)\s*(4|5|10|12|100)(?!\d)/i.exec(text);
+
+  const raw = contextual ? contextual[2] : standalone?.[1];
+  const explicitScale = contextual ? contextual[3] : standalone?.[2];
   const match = contextual ?? standalone;
-  if (!match) return null;
-  const numeric = parseNumber(match[1]);
+  if (!match || !raw) return null;
+
+  const numeric = parseNumber(raw);
   if (numeric === null) return null;
-  const scale = match[2] ? Number(match[2]) : 5;
+
+  const scale = explicitScale ? Number(explicitScale) : inferGpaScale(contextual ? contextual[1] : "", numeric);
   if (numeric <= 0 || numeric > scale) return null;
+
   return {
     value: `${numeric}/${scale}`,
-    display: `${match[1].replace(",", ".")} из ${scale}`,
+    display: `${raw.replace(",", ".")} из ${scale}`,
     numeric,
     quote: clipQuote(text, match.index, match[0].length),
     index: match.index,

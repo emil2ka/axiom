@@ -1,6 +1,6 @@
 import type { MemoryFact, Program, Roadmap, RoadmapStep } from "../types";
 import { shiftMonths, shiftMonthsIso } from "./format";
-import { getInterestTags, getIelts, getLanguageNames } from "./profile";
+import { getGpaPercent, getInterestTags, getIelts, getLanguageNames } from "./profile";
 import { PROGRAMS, recommend } from "./recommend";
 
 interface DraftStep extends RoadmapStep {
@@ -118,6 +118,19 @@ export function buildRoadmap(memories: MemoryFact[], program: Program | null, pr
       dueIso: shiftMonthsIso(deadlineIso, -3),
       why: "Нужен сертификат с достаточным баллом до подачи.",
       sourceNote: "Рекомендация AXIOM",
+    });
+  }
+
+  const gpaPercent = getGpaPercent(memories);
+  if (target.gpaMinPercent !== null && gpaPercent !== null && gpaPercent < target.gpaMinPercent) {
+    push({
+      id: `${target.id}-gpa-up`,
+      category: "activity",
+      title: `Подтянуть средний балл до ${target.gpaMinPercent}%`,
+      description: `Сейчас ${gpaPercent}% — не хватает ${target.gpaMinPercent - gpaPercent} п.п. Сфокусируйся на профильных предметах: они весят больше при отборе.`,
+      dueIso: shiftMonthsIso(deadlineIso, -8),
+      why: `${target.university} отбирает по среднему баллу от ${target.gpaMinPercent}%.`,
+      sourceNote: "Демо-данные · требования программы",
     });
   }
 

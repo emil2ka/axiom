@@ -6,6 +6,7 @@ import {
   getBudget,
   getCountries,
   getGpa,
+  getGpaPercent,
   getIelts,
   getInterestTags,
   getInterests,
@@ -28,6 +29,7 @@ export function diagnose(memories: MemoryFact[], programs: Program[] = PROGRAMS)
   const budget = getBudget(memories);
   const ielts = getIelts(memories);
   const gpa = getGpa(memories);
+  const gpaPercent = getGpaPercent(memories);
   const countries = getCountries(memories);
   const interests = getInterests(memories);
   const intakeYear = getIntakeYear(memories);
@@ -61,8 +63,26 @@ export function diagnose(memories: MemoryFact[], programs: Program[] = PROGRAMS)
     constraints.push("IELTS не сдан — программы с языковым порогом пока под вопросом");
   }
 
-  if (gpa !== null && gpa >= 4.2) {
-    strengths.push(`Средний балл ${gpa} — хорошая база для merit-стипендий`);
+  if (gpaPercent !== null) {
+    // Сравниваем в процентах от максимума шкалы: 3.9 из 4 и 4.9 из 5 — оба отличники.
+    const open = programs.filter(
+      (program) => program.gpaMinPercent === null || program.gpaMinPercent <= gpaPercent,
+    );
+    if (gpaPercent >= 85) {
+      strengths.push(
+        `Средний балл ${gpa} (${gpaPercent}% от максимума) — сильная база для merit-стипендий, проходит порог ${open.length} из ${programs.length} программ`,
+      );
+    } else {
+      strengths.push(`Средний балл ${gpa} (${gpaPercent}%) проходит порог ${open.length} из ${programs.length} программ`);
+    }
+    const closed = programs.length - open.length;
+    if (closed > 0) {
+      constraints.push(
+        `${closed} ${pluralRu(closed, "программа требует", "программы требуют", "программ требуют")} средний балл выше ${gpaPercent}%`,
+      );
+    }
+  } else {
+    constraints.push("Средний балл не указан — отборные программы оценить нельзя");
   }
 
   if (tags.length) {

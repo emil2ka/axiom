@@ -1,7 +1,7 @@
 import type { MemoryFact, RankDiff, RecommendResult, ScoreWeights, WhatIfParams, WhatIfResult } from "../types";
 import { pluralRu } from "./format";
 import { getPriority } from "./profile";
-import { DEFAULT_WEIGHTS, PRIORITY_LABEL_RU, recommend } from "./recommend";
+import { DEFAULT_WEIGHTS, PRIORITY_LABEL_RU, normalizeWeights, recommend } from "./recommend";
 
 export interface WhatIfPreset {
   id: string;
@@ -45,16 +45,9 @@ export function buildWeights(params: WhatIfParams): ScoreWeights {
     field: DEFAULT_WEIGHTS.field,
     scholarship: DEFAULT_WEIGHTS.scholarship * (params.scholarshipWeight ?? 1),
     timing: DEFAULT_WEIGHTS.timing,
+    gpa: DEFAULT_WEIGHTS.gpa,
   };
-  const sum = base.budget + base.country + base.ielts + base.field + base.scholarship + base.timing || 1;
-  return {
-    budget: base.budget / sum,
-    country: base.country / sum,
-    ielts: base.ielts / sum,
-    field: base.field / sum,
-    scholarship: base.scholarship / sum,
-    timing: base.timing / sum,
-  };
+  return normalizeWeights(base);
 }
 
 function rankMap(result: RecommendResult, topN?: number): Map<string, number> {

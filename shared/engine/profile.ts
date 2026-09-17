@@ -64,6 +64,25 @@ export function getGpa(memories: MemoryFact[]): number | null {
   return numeric(memories, "gpa");
 }
 
+/** Шкала оценки, в которой записан факт GPA («4.5/5» → 5). По умолчанию 5. */
+export function getGpaScale(memories: MemoryFact[]): number {
+  const value = factValue(memories, "gpa");
+  const match = value ? /\/(\d{1,3})/.exec(value) : null;
+  const scale = match ? Number(match[1]) : 5;
+  return scale > 0 ? scale : 5;
+}
+
+/**
+ * Единственная сравнимая форма GPA: доля от максимума шкалы, 0..100.
+ * Без неё 3.9 из 4 (отличник) выглядит слабее, чем 4.0 из 5 (середняк).
+ */
+export function getGpaPercent(memories: MemoryFact[]): number | null {
+  const raw = getGpa(memories);
+  if (raw === null) return null;
+  const scale = getGpaScale(memories);
+  return Math.round(Math.min(100, Math.max(0, (raw / scale) * 100)));
+}
+
 export function splitValues(value: string | null): string[] {
   if (!value) return [];
   return value
