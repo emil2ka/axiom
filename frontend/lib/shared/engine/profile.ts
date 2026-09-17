@@ -138,10 +138,17 @@ export function getConstraints(memories: MemoryFact[]): ProfileConstraints {
   const raw = splitValues(factValue(memories, "constraints"));
   const text = raw.join(" ").toLowerCase();
 
+  // Порядок слов в русском свободный («не хочу учить язык» = «язык учить не
+  // хочу»), поэтому ищем смысл: отрицание + язык + глагол изучения рядом.
+  const negated = /не\s+(?:хочу|готов[а-яё]*|буду|планирую|могу)/.test(text);
+  const aboutLanguage = /язык|языка|языки|иностранн/.test(text);
+  const aboutLearning = /учить|изучать|осваивать|учи́ть|зубрить/.test(text);
+
   const englishOnly =
-    /не\s+(?:хочу|готов[а-яё]*|буду|планирую|могу)[^.;]{0,40}(?:учить|учи́ть|изучать)[^.;]{0,20}язы/.test(text) ||
+    (negated && aboutLanguage && aboutLearning) ||
     /только\s+(?:на\s+)?английск/.test(text) ||
-    /нужен\s+английск/.test(text);
+    /нужен\s+английск/.test(text) ||
+    /(?:на\s+)?английском\s+только/.test(text);
 
   const needsScholarship =
     /без\s+стипенди/.test(text) ||

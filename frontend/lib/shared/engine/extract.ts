@@ -57,7 +57,7 @@ const COUNTRY_ORDER = COUNTRY_PATTERNS.map((item) => item.name);
 const INTEREST_PATTERNS: { label: string; re: RegExp }[] = [
   {
     label: "IT и программирование",
-    re: /программиров|информатик|компьютерн|разработк|кодинг|software|веб|web|front[- ]?end|back[- ]?end|python|javascript|мобильн[а-яё]*\s+разраб|(^|[\s,;])(it|айти|ит)(?=[\s,;.]|$)/i,
+    re: /программиров|программист|информатик|компьютерн|разработк|разработчик|кодинг|software|веб|web|front[- ]?end|back[- ]?end|python|javascript|мобильн[а-яё]*\s+разраб|(^|[\s,;])(it|айти|ит)(?=[\s,;.]|$)/i,
   },
   {
     label: "Data Science и аналитика",
@@ -353,24 +353,34 @@ function findName(text: string): { value: string; quote: string; index: number }
  * «только на английском», «нужна стипендия». Ловим все формы — иначе
  * ограничение молча теряется и рекомендации его не учитывают.
  */
-const CONSTRAINT_PATTERNS: RegExp[] = [
-  /(?:не\s+(?:хочу|могу|буду|планирую|рассматриваю|готов[а-яё]*))\s+[^.!?;]{3,90}/gi,
-  /без\s+(?:стипенди[а-яё]*|гранта)[^.!?;]{0,60}/gi,
-  /(?:нужна|нужен|только\s+с)\s+(?:полн[а-яё]*\s+)?(?:стипенди[а-яё]*|грант)[^.!?;]{0,50}/gi,
-  /только\s+(?:на\s+)?английск[а-яё]*[^.!?;]{0,40}/gi,
-  /(?:не\s+потян[а-яё]*|финансово\s+не\s+потян[а-яё]*)[^.!?;]{0,50}/gi,
+const CONSTRAINT_PATTERNS: { re: RegExp; group: number }[] = [
+  { re: /(?:не\s+(?:хочу|могу|буду|планирую|рассматриваю|готов[а-яё]*))\s+[^.!?;,]{3,70}/gi, group: 0 },
+  // Обратный порядок слов: «новый язык учить не хочу», «далеко ехать не готов».
+  // Начало привязано к запятой или союзу, иначе фраза съедает всё предложение,
+  // а её показывают пользователю как его собственные слова.
+  {
+    re: /(?:^|[,;—–]\s*|\bно\s+|\bа\s+|\bи\s+)([а-яёa-z][^.!?;,]{2,50}?\s+не\s+(?:хочу|могу|буду|планирую|готов[а-яё]*))(?=[\s.,;!?]|$)/gi,
+    group: 1,
+  },
+  { re: /без\s+(?:стипенди[а-яё]*|гранта)[^.!?;,]{0,50}/gi, group: 0 },
+  { re: /(?:нужна|нужен|только\s+с)\s+(?:полн[а-яё]*\s+)?(?:стипенди[а-яё]*|грант)[^.!?;,]{0,40}/gi, group: 0 },
+  { re: /только\s+(?:на\s+)?английск[а-яё]*[^.!?;,]{0,30}/gi, group: 0 },
+  { re: /(?:финансово\s+)?не\s+потян[а-яё]*[^.!?;,]{0,40}/gi, group: 0 },
 ];
 
 function findConstraints(text: string): { value: string; quote: string; index: number }[] {
   const results: { value: string; quote: string; index: number }[] = [];
-  for (const pattern of CONSTRAINT_PATTERNS) {
-    pattern.lastIndex = 0;
+  for (const { re, group } of CONSTRAINT_PATTERNS) {
+    re.lastIndex = 0;
     let match: RegExpExecArray | null;
-    while ((match = pattern.exec(text)) !== null) {
-      const value = match[0].trim().replace(/\s+/g, " ");
+    while ((match = re.exec(text)) !== null) {
+      const captured = match[group] ?? match[0];
+      const value = captured.trim().replace(/\s+/g, " ");
+      if (value.length < 4) continue;
       // Одна фраза может подойти под два шаблона — не дублируем.
       if (results.some((item) => item.value.includes(value) || value.includes(item.value))) continue;
-      results.push({ value, quote: clipQuote(text, match.index, match[0].length), index: match.index });
+      const index = match.index + match[0].indexOf(captured);
+      results.push({ value, quote: clipQuote(text, index, captured.length), index });
     }
   }
   return results.sort((a, b) => a.index - b.index);

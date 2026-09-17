@@ -231,22 +231,24 @@ function scoreComponents(program: Program, ctx: ScoreContext): ScoredParts {
         weight: w.budget * budgetComponent,
         field: "program",
       });
-    } else if (ctx.budget - total >= 0) {
+    } else if (total <= ctx.budget) {
       reasons.push({
         text: `Полная стоимость ${formatUsd(total)}/год укладывается в бюджет — запас ${formatUsd(ctx.budget - total)}`,
         weight: w.budget * budgetComponent,
         field: "budget",
       });
-    } else if (budgetComponent >= 0.2) {
-      reasons.push({
-        text: `Стоимость ${formatUsd(total)}/год чуть выше бюджета — не хватает ${formatUsd(total - ctx.budget)}`,
-        weight: w.budget * budgetComponent,
-        field: "budget",
-      });
     } else {
+      // Превышение бюджета — всегда пробел, а не «причина». Причины обрезаются
+      // по весу до четырёх, и предупреждение о деньгах пропадало из карточки:
+      // программа за $10 300 при бюджете $7 000 выглядела как обычный вариант.
+      const shortfall = total - ctx.budget;
+      const overshootPercent = Math.round((total / ctx.budget - 1) * 100);
       gaps.push({
-        text: `Превышает бюджет на ${formatUsd(total - ctx.budget)} в год`,
-        severity: ratio > 1.5 ? "high" : "medium",
+        text:
+          overshootPercent <= 15
+            ? `Немного выше бюджета: не хватает ${formatUsd(shortfall)} в год`
+            : `Превышает бюджет на ${formatUsd(shortfall)} в год (+${overshootPercent}%)`,
+        severity: overshootPercent > 50 ? "high" : overshootPercent > 15 ? "medium" : "low",
       });
     }
   }
@@ -506,6 +508,21 @@ export function countConstraintViolations(program: Program, ctx: ScoreContext): 
   return violations;
 }
 
+/**
+ * Порог IELTS и среднего балла — условие приёма, а не предпочтение. Как вес он
+ * стоил ~6 баллов из 100, поэтому программа с пометкой «у тебя 64% при пороге
+ * 80%» всё равно оказывалась первой. Недостижимое не прячем — показываем ниже
+ * достижимого, вместе с объяснением.
+ */
+export function reachabilityPenalty(program: Program, ctx: ScoreContext): number {
+  let penalty = 1;
+  if (program.ieltsMin !== null && ctx.ielts !== null && ctx.ielts < program.ieltsMin - 0.5) penalty *= 0.75;
+  if (program.gpaMinPercent !== null && ctx.gpaPercent !== null && ctx.gpaPercent < program.gpaMinPercent - 5) {
+    penalty *= 0.8;
+  }
+  return penalty;
+}
+
 export function scoreProgram(program: Program, ctx: ScoreContext): Omit<Recommendation, "rank"> {
   const { components, reasons, gaps } = scoreComponents(program, ctx);
   const weights = ctx.weights;
@@ -524,7 +541,7 @@ export function scoreProgram(program: Program, ctx: ScoreContext): Omit<Recommen
   // учу», немецкие программы всё равно оставались бы на первых местах.
   const violations = countConstraintViolations(program, ctx);
   const constraintPenalty = violations === 0 ? 1 : Math.pow(0.45, violations);
-  const score = Math.round((weighted / weightSum) * 100 * constraintPenalty);
+  const score = Math.round((weighted / weightSum) * 100 * constraintPenalty * reachabilityPenalty(program, ctx));
   const budgetDelta = ctx.budget ? ctx.budget - totalPerYear(program) : null;
 
   const severityOrder: Record<Gap["severity"], number> = { high: 0, medium: 1, low: 2 };
