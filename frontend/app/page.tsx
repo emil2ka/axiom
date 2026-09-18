@@ -59,6 +59,14 @@ export default async function LandingPage({
             >
               Вузы
             </Link>
+            <a
+              href="https://github.com/emil2ka/axiom"
+              target="_blank"
+              rel="noreferrer"
+              className="text-[11px] uppercase tracking-[0.16em] text-mist-500 transition-colors hover:text-mist-100"
+            >
+              GitHub
+            </a>
           </nav>
           <Link href="/interview" className={buttonStyles("primary", "sm")}>
             Начать

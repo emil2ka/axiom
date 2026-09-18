@@ -67,6 +67,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Logo />
           </Link>
           <div className="flex shrink-0 items-center gap-5">
+            <a
+              href="https://github.com/emil2ka/axiom"
+              target="_blank"
+              rel="noreferrer"
+              className="text-[12px] text-mist-400 transition-colors hover:text-mist-100"
+            >
+              GitHub
+            </a>
             {hydrated && memoriesCount > 0 ? (
               <Link href="/diagnosis" className="text-[12px] text-mist-400 transition-colors hover:text-mist-100">
                 {demoMode ? "Демо" : "Память"} <span className="tnum text-mist-200">{memoriesCount}</span>

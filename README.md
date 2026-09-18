@@ -2,7 +2,7 @@
 
 **LOCUS Startup Hackathon 2026 · Кейс 02 «Персональный маршрут поступления»**
 
-**Прод:** [axiom-lemon.vercel.app](https://axiom-lemon.vercel.app) · **API:** [axiom-api-self.vercel.app/health](https://axiom-api-self.vercel.app/health)
+**Прод:** [axiom-lemon.vercel.app](https://axiom-lemon.vercel.app) · **API:** [axiom-api-self.vercel.app/health](https://axiom-api-self.vercel.app/health) · **Код:** [github.com/emil2ka/axiom](https://github.com/emil2ka/axiom)
 
 AXIOM — это AI-сервис поступления, который не выдаёт список университетов, а **разговаривает** с абитуриентом, **запоминает** важное о нём (интересы, бюджет, IELTS, страну, приоритеты, ограничения) и строит **персональный маршрут**: рекомендации → сравнение → сценарии «а что если» → пошаговый план → конкретный следующий шаг.
 

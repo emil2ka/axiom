@@ -34,6 +34,14 @@ export function SiteShell({
             <Link href="/#journey" className="hidden text-[12px] text-mist-400 transition-colors hover:text-mist-100 md:block">
               Как это работает
             </Link>
+            <a
+              href="https://github.com/emil2ka/axiom"
+              target="_blank"
+              rel="noreferrer"
+              className="hidden text-[12px] text-mist-400 transition-colors hover:text-mist-100 sm:block"
+            >
+              GitHub
+            </a>
             <Link href="/interview" className={buttonStyles("primary", "sm")}>
               Начать
             </Link>
