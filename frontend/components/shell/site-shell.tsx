@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
-import { UserMenu } from "@/components/shell/user-menu";
 import { buttonStyles } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -35,7 +34,6 @@ export function SiteShell({
             <Link href="/#journey" className="hidden text-[12px] text-mist-400 transition-colors hover:text-mist-100 md:block">
               Как это работает
             </Link>
-            <UserMenu />
             <Link href="/interview" className={buttonStyles("primary", "sm")}>
               Начать
             </Link>

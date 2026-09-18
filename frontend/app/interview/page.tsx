@@ -15,15 +15,7 @@ import { IconArrowRight, IconBrain, IconRefresh, IconVolume, IconVolumeOff, Icon
 import { FIELD_LABELS, composeAgentReply, extractFacts, reconcileEnrichment, reparseFactValue, selectNextQuestion } from "@/lib/shared/engine";
 import type { MemoryFact, MemoryField, MemorySource } from "@/lib/shared/engine";
 import { extractFactsSmart } from "@/lib/api";
-import {
-  consumeLlmQuotaFlag,
-  consumeVoiceQuotaFlag,
-  llmExtract,
-  llmReply,
-  synthesizeSpeech,
-  voiceEnabled,
-  type ExtractedFact,
-} from "@/lib/voice-api";
+import { llmExtract, llmReply, synthesizeSpeech, voiceEnabled, type ExtractedFact } from "@/lib/voice-api";
 import { useAxiomStore } from "@/lib/store";
 import { useHydrated } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
@@ -544,19 +536,12 @@ function InterviewContent() {
         }
         addMessage({ id: uid(), role: "axiom", text: reply, ts: Date.now() });
 
-        if (consumeLlmQuotaFlag()) {
-          setNotice("Лимит AI-запросов на этот месяц исчерпан — дальше AXIOM отвечает по правилам, без модели.");
-        }
-
         setPhase(willFinish ? "done" : "idle");
 
         if (voiceEnabled && speakReplies && !willFinish) {
           setPhase("speaking");
           void synthesizeSpeech(reply).then((audio) => {
             if (!audio) {
-              if (consumeVoiceQuotaFlag()) {
-                setNotice("Лимит озвучки на этот месяц исчерпан — AXIOM продолжит текстом.");
-              }
               setPhase((current) => (current === "speaking" ? "idle" : current));
               return;
             }

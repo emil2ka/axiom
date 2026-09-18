@@ -2,7 +2,6 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Logo } from "@/components/logo";
 import { DemoButton } from "@/components/shell/demo-button";
-import { UserMenu } from "@/components/shell/user-menu";
 import { buttonStyles } from "@/components/ui/button";
 import { CampusField } from "@/components/landing/campus-field";
 import { FeatureShowcase } from "@/components/landing/feature-showcase";
@@ -61,12 +60,9 @@ export default async function LandingPage({
               Вузы
             </Link>
           </nav>
-          <div className="flex items-center gap-5">
-            <UserMenu />
-            <Link href="/interview" className={buttonStyles("primary", "sm")}>
-              Начать
-            </Link>
-          </div>
+          <Link href="/interview" className={buttonStyles("primary", "sm")}>
+            Начать
+          </Link>
         </div>
       </header>
 

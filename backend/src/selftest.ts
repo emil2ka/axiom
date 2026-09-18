@@ -13,9 +13,6 @@ import {
   FIELD_LABELS,
   detectConflicts,
   diagnose,
-  emptyJourney,
-  isEmptyJourney,
-  mergeJourney,
   estimateImpact,
   explainMemoryUpdate,
   factTimeline,
@@ -37,9 +34,7 @@ import {
   totalPerYear,
   totalProgramCost,
   selectNextQuestion,
-  type JourneySnapshot,
   type MemoryFact,
-  type MemoryField,
   type Program,
 } from "./shared/engine/index";
 
@@ -1197,86 +1192,6 @@ check(
 // Повторная миграция ничего не портит.
 const twice = normalizeStoredMemories(migrated);
 check("повторный прогон миграции идемпотентен", JSON.stringify(twice.map((item) => [item.value, item.numeric])) === JSON.stringify(migrated.map((item) => [item.value, item.numeric])));
-
-console.log("\n[11] Слияние гостевого и облачного профиля");
-
-const snapFact = (field: MemoryField, display: string, value = display): MemoryFact => ({
-  id: `${field}-1`,
-  field,
-  label: field,
-  value,
-  display,
-  quote: display,
-  confidence: 0.9,
-  source: "text",
-  createdAt: 1,
-});
-
-const localJourney: JourneySnapshot = {
-  state: {
-    memories: [snapFact("budget", "до $10 000", "10000")],
-    messages: [{ id: "m1", role: "user", text: "привет", ts: 2 }],
-    answeredQuestionIds: ["q1"],
-    whatIf: { presetId: "budget", budget: 8000, ielts: null, countryWeight: 2, budgetWeight: 2, scholarshipWeight: 1 },
-  },
-  progress: {
-    compareIds: ["p1"],
-    favorites: ["p1"],
-    targetProgramId: "p1",
-    roadmapDone: { step1: true },
-  },
-};
-
-const remoteJourney: JourneySnapshot = {
-  state: {
-    memories: [snapFact("budget", "до $15 000", "15000"), snapFact("country", "Германия")],
-    messages: [
-      { id: "m1", role: "user", text: "привет", ts: 2 },
-      { id: "m2", role: "axiom", text: "расскажи о себе", ts: 1 },
-    ],
-    answeredQuestionIds: ["q2"],
-    whatIf: { presetId: "balanced", budget: null, ielts: null, countryWeight: 1, budgetWeight: 1, scholarshipWeight: 1 },
-  },
-  progress: {
-    compareIds: ["p2"],
-    favorites: ["p2"],
-    targetProgramId: null,
-    roadmapDone: { step2: true },
-  },
-};
-
-check("пустой снимок распознаётся", isEmptyJourney(emptyJourney()));
-check("гостевой профиль не пуст", !isEmptyJourney(localJourney));
-
-const claimed = mergeJourney(localJourney, null);
-check("без облака профиль сохраняется как есть", claimed.state.memories.length === 1 && claimed.state.memories[0].display === "до $10 000");
-
-const mergedJourney = mergeJourney(localJourney, remoteJourney);
-const mergedBudget = mergedJourney.state.memories.find((item) => item.field === "budget");
-check("свежая локальная правка побеждает облачную", mergedBudget?.value === "10000", mergedBudget?.value);
-check("факт из облака не теряется", mergedJourney.state.memories.some((item) => item.field === "country"));
-check("реплики не задваиваются", mergedJourney.state.messages.length === 2, String(mergedJourney.state.messages.length));
-check("реплики идут по времени", mergedJourney.state.messages[0].id === "m2" && mergedJourney.state.messages[1].id === "m1");
-check("отвеченные вопросы объединяются", mergedJourney.state.answeredQuestionIds.join(",") === "q2,q1", mergedJourney.state.answeredQuestionIds.join(","));
-check("прогресс маршрута складывается", mergedJourney.progress.roadmapDone.step1 === true && mergedJourney.progress.roadmapDone.step2 === true);
-check("сравнение объединяется", mergedJourney.progress.compareIds.join(",") === "p2,p1", mergedJourney.progress.compareIds.join(","));
-check("избранное объединяется", mergedJourney.progress.favorites.join(",") === "p2,p1", mergedJourney.progress.favorites.join(","));
-check("локальная цель сохраняется, если в облаке её нет", mergedJourney.progress.targetProgramId === "p1");
-check("непустой локальный сценарий «а если» не теряется", mergedJourney.state.whatIf.presetId === "budget" && mergedJourney.state.whatIf.budget === 8000);
-
-const remoteScenario: JourneySnapshot = {
-  ...remoteJourney,
-  state: { ...remoteJourney.state, whatIf: { presetId: "scholarship", budget: null, ielts: 7, countryWeight: 1, budgetWeight: 1, scholarshipWeight: 2 } },
-};
-check("облачный сценарий сильнее локального по умолчанию", mergeJourney({ ...localJourney, state: { ...localJourney.state, whatIf: emptyJourney().state.whatIf } }, remoteScenario).state.whatIf.presetId === "scholarship");
-
-const mergedTwice = mergeJourney(mergedJourney, remoteJourney);
-check(
-  "повторное слияние идемпотентно",
-  JSON.stringify(mergedTwice.state.memories.map((item) => item.value)) === JSON.stringify(mergedJourney.state.memories.map((item) => item.value)) &&
-    mergedTwice.progress.compareIds.length === mergedJourney.progress.compareIds.length &&
-    mergedTwice.state.messages.length === mergedJourney.state.messages.length,
-);
 
 console.log(`\nИтог: ${passed} ok, ${failed} fail\n`);
 if (failed > 0) process.exit(1);

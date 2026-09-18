@@ -1,5 +1,4 @@
 import type { NextRequest } from "next/server";
-import { consumeQuota, quotaResponse } from "@/lib/server/quota";
 
 export const runtime = "nodejs";
 
@@ -27,9 +26,6 @@ export async function POST(request: NextRequest) {
   } catch {
     return Response.json({ error: "invalid json" }, { status: 400 });
   }
-
-  const quota = await consumeQuota("llm");
-  if (!quota.allowed) return quotaResponse(quota, "llm");
 
   const known = payload.known ?? [];
   const missing = payload.missing ?? [];
