@@ -50,6 +50,9 @@ const COUNTRY_PATTERNS: { name: string; re: RegExp }[] = [
   { name: "Швеция", re: /швеци/i },
   { name: "Дания", re: /дани[яюи]/i },
   { name: "Ирландия", re: /ирланд/i },
+  { name: "Эстония", re: /эстон/i },
+  { name: "Латвия", re: /латви/i },
+  { name: "Словения", re: /словени/i },
   { name: "Норвегия", re: /норвег/i },
   { name: "Бельгия", re: /бельги/i },
 ];

@@ -602,5 +602,1308 @@
       }
     ],
     "demo": true
+  },
+  {
+    "id": "tum-informatics",
+    "university": "Technical University of Munich",
+    "programName": "Informatics, B.Sc. (на немецком)",
+    "country": "Германия",
+    "countryCode": "DE",
+    "city": "Мюнхен",
+    "field": "IT и Computer Science",
+    "tags": [
+      "it",
+      "data"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 3,
+    "language": "Немецкий",
+    "ieltsMin": null,
+    "tuitionPerYearUsd": 0,
+    "livingPerYearUsd": 14400,
+    "scholarship": "partial",
+    "scholarshipNote": "Поддержка DAAD и стипендии TUM — условия зависят от программы",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2027-07-15",
+        "label": "Ориентир: подача до 15 июля 2027"
+      }
+    ],
+    "summary": "Технический университет с сильной школой информатики и инженерии в Мюнхене.",
+    "highlights": [
+      "Инженерный флагман",
+      "Город технологических компаний",
+      "Нужен немецкий B2"
+    ],
+    "sources": [
+      {
+        "label": "Официальный сайт вуза",
+        "url": "https://www.tum.de/en/"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 85,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "hu-berlin-cs",
+    "university": "Humboldt University of Berlin",
+    "programName": "Computer Science, B.Sc. (на немецком)",
+    "country": "Германия",
+    "countryCode": "DE",
+    "city": "Берлин",
+    "field": "IT и Computer Science",
+    "tags": [
+      "it",
+      "data"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 3,
+    "language": "Немецкий",
+    "ieltsMin": null,
+    "tuitionPerYearUsd": 0,
+    "livingPerYearUsd": 13200,
+    "scholarship": "partial",
+    "scholarshipNote": "DAAD и стипендии университета — уточняй на момент подачи",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2027-07-15",
+        "label": "Ориентир: подача до 15 июля 2027"
+      }
+    ],
+    "summary": "Исследовательский университет в центре Берлина с сильной математической базой.",
+    "highlights": [
+      "Берлинский tech-рынок",
+      "Низкая стоимость обучения",
+      "Нужен немецкий B2"
+    ],
+    "sources": [
+      {
+        "label": "Официальный сайт вуза",
+        "url": "https://www.hu-berlin.de/en"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 78,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "univie-cs",
+    "university": "University of Vienna",
+    "programName": "Computer Science, B.Sc. (на немецком)",
+    "country": "Австрия",
+    "countryCode": "AT",
+    "city": "Вена",
+    "field": "IT и Computer Science",
+    "tags": [
+      "it",
+      "data"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 3,
+    "language": "Немецкий",
+    "ieltsMin": null,
+    "tuitionPerYearUsd": 1600,
+    "livingPerYearUsd": 12000,
+    "scholarship": "partial",
+    "scholarshipNote": "Стипендии OeAD и вуза — проверяй условия",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2027-09-05",
+        "label": "Ориентир: подача до 5 сентября 2027"
+      }
+    ],
+    "summary": "Классический исследовательский университет с доступной стоимостью обучения.",
+    "highlights": [
+      "Столица Австрии",
+      "Сильная теория",
+      "Нужен немецкий B2"
+    ],
+    "sources": [
+      {
+        "label": "Официальный сайт вуза",
+        "url": "https://www.univie.ac.at/en/"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 78,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "kuleuven-business",
+    "university": "KU Leuven",
+    "programName": "Business Administration, B.Sc. (на английском)",
+    "country": "Бельгия",
+    "countryCode": "BE",
+    "city": "Лёвен",
+    "field": "Бизнес и предпринимательство",
+    "tags": [
+      "business",
+      "finance"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 3,
+    "language": "Английский",
+    "ieltsMin": 6.5,
+    "tuitionPerYearUsd": 8200,
+    "livingPerYearUsd": 11200,
+    "scholarship": "partial",
+    "scholarshipNote": "Стипендии для сильных кандидатов — условия зависят от факультета",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2027-04-30",
+        "label": "Ориентир: подача до 30 апреля 2027"
+      }
+    ],
+    "summary": "Сильный европейский университет в студенческом городе рядом с Брюсселем.",
+    "highlights": [
+      "Бизнес и аналитика",
+      "Международный кампус",
+      "Близко к Брюсселю"
+    ],
+    "sources": [
+      {
+        "label": "Официальный сайт вуза",
+        "url": "https://www.kuleuven.be/english"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 82,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "ucph-data",
+    "university": "University of Copenhagen",
+    "programName": "Data Science, B.Sc. (на английском)",
+    "country": "Дания",
+    "countryCode": "DK",
+    "city": "Копенгаген",
+    "field": "Data Science и аналитика",
+    "tags": [
+      "data",
+      "it"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 3,
+    "language": "Английский",
+    "ieltsMin": 6.5,
+    "tuitionPerYearUsd": 15000,
+    "livingPerYearUsd": 15600,
+    "scholarship": "partial",
+    "scholarshipNote": "Конкурсные tuition waivers — уточняй на сайте программы",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2027-03-15",
+        "label": "Ориентир: подача до 15 марта 2027"
+      }
+    ],
+    "summary": "Датский исследовательский кампус для тех, кому важны data и сильная академическая среда.",
+    "highlights": [
+      "Data-направление",
+      "Северный кампус",
+      "Высокая стоимость жизни"
+    ],
+    "sources": [
+      {
+        "label": "Официальный сайт вуза",
+        "url": "https://www.ku.dk/english/"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 85,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "tcd-cs",
+    "university": "Trinity College Dublin",
+    "programName": "Computer Science, B.A. (на английском)",
+    "country": "Ирландия",
+    "countryCode": "IE",
+    "city": "Дублин",
+    "field": "IT и Computer Science",
+    "tags": [
+      "it",
+      "data"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 4,
+    "language": "Английский",
+    "ieltsMin": 6.5,
+    "tuitionPerYearUsd": 24000,
+    "livingPerYearUsd": 16000,
+    "scholarship": "partial",
+    "scholarshipNote": "Global Excellence Scholarships — конкурсная поддержка",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2027-06-30",
+        "label": "Ориентир: подача до 30 июня 2027"
+      }
+    ],
+    "summary": "Исторический кампус и прямой доступ к международному IT-рынку Дублина.",
+    "highlights": [
+      "Big Tech в Дублине",
+      "Англоязычная среда",
+      "Конкурсные стипендии"
+    ],
+    "sources": [
+      {
+        "label": "Официальный сайт вуза",
+        "url": "https://www.tcd.ie/"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 86,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "ucd-cs",
+    "university": "University College Dublin",
+    "programName": "Computer Science, B.Sc. (на английском)",
+    "country": "Ирландия",
+    "countryCode": "IE",
+    "city": "Дублин",
+    "field": "IT и Computer Science",
+    "tags": [
+      "it",
+      "data"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 4,
+    "language": "Английский",
+    "ieltsMin": 6.5,
+    "tuitionPerYearUsd": 22000,
+    "livingPerYearUsd": 16000,
+    "scholarship": "partial",
+    "scholarshipNote": "International Student Scholarships — конкурсная поддержка",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2027-07-01",
+        "label": "Ориентир: подача до 1 июля 2027"
+      }
+    ],
+    "summary": "Большой кампусный университет с прикладными IT-треками и индустриальными партнёрствами.",
+    "highlights": [
+      "Кампусный формат",
+      "Сильная индустрия",
+      "Англоязычная среда"
+    ],
+    "sources": [
+      {
+        "label": "Официальный сайт вуза",
+        "url": "https://www.ucd.ie/"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 80,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "utartu-it",
+    "university": "University of Tartu",
+    "programName": "Science and Technology, B.Sc. (на английском)",
+    "country": "Эстония",
+    "countryCode": "EE",
+    "city": "Тарту",
+    "field": "IT и Computer Science",
+    "tags": [
+      "it",
+      "engineering",
+      "data"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 3,
+    "language": "Английский",
+    "ieltsMin": 6,
+    "tuitionPerYearUsd": 6800,
+    "livingPerYearUsd": 7200,
+    "scholarship": "partial",
+    "scholarshipNote": "Tuition waivers для сильных заявителей — по конкурсу",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2027-03-15",
+        "label": "Ориентир: подача до 15 марта 2027"
+      }
+    ],
+    "summary": "Компактный университетский город и технологическая экосистема Эстонии.",
+    "highlights": [
+      "Цифровая Эстония",
+      "Англоязычный трек",
+      "Доступная жизнь"
+    ],
+    "sources": [
+      {
+        "label": "Официальный сайт вуза",
+        "url": "https://ut.ee/en"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 75,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "taltech-cyber",
+    "university": "Tallinn University of Technology",
+    "programName": "Cyber Security Engineering, B.Sc. (на английском)",
+    "country": "Эстония",
+    "countryCode": "EE",
+    "city": "Таллин",
+    "field": "IT и Computer Science",
+    "tags": [
+      "it",
+      "engineering"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 3,
+    "language": "Английский",
+    "ieltsMin": 6,
+    "tuitionPerYearUsd": 7200,
+    "livingPerYearUsd": 8400,
+    "scholarship": "partial",
+    "scholarshipNote": "Scholarship и tuition waivers — по конкурсу",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2027-04-01",
+        "label": "Ориентир: подача до 1 апреля 2027"
+      }
+    ],
+    "summary": "Технический кампус в цифровой столице с фокусом на инженерии и кибербезопасности.",
+    "highlights": [
+      "Кибербезопасность",
+      "Технологичный Таллин",
+      "Англоязычная программа"
+    ],
+    "sources": [
+      {
+        "label": "Официальный сайт вуза",
+        "url": "https://taltech.ee/en"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 75,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "rtu-cs",
+    "university": "Riga Technical University",
+    "programName": "Computer Systems, B.Sc. (на английском)",
+    "country": "Латвия",
+    "countryCode": "LV",
+    "city": "Рига",
+    "field": "IT и Computer Science",
+    "tags": [
+      "it",
+      "engineering"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 4,
+    "language": "Английский",
+    "ieltsMin": 5.5,
+    "tuitionPerYearUsd": 5200,
+    "livingPerYearUsd": 7200,
+    "scholarship": "partial",
+    "scholarshipNote": "Скидки и гранты для иностранных студентов — уточняй на сайте",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2027-07-01",
+        "label": "Ориентир: подача до 1 июля 2027"
+      }
+    ],
+    "summary": "Инженерный вуз Балтии с доступной стоимостью жизни и прикладным обучением.",
+    "highlights": [
+      "Инженерная база",
+      "Доступная Рига",
+      "Англоязычный трек"
+    ],
+    "sources": [
+      {
+        "label": "Официальный сайт вуза",
+        "url": "https://www.rtu.lv/en"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 70,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "uljubljana-cs",
+    "university": "University of Ljubljana",
+    "programName": "Computer and Information Science, B.Sc. (на английском)",
+    "country": "Словения",
+    "countryCode": "SI",
+    "city": "Любляна",
+    "field": "IT и Computer Science",
+    "tags": [
+      "it",
+      "data"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 3,
+    "language": "Английский",
+    "ieltsMin": 6,
+    "tuitionPerYearUsd": 4800,
+    "livingPerYearUsd": 8400,
+    "scholarship": "partial",
+    "scholarshipNote": "Поддержка зависит от гражданства и факультета",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2027-07-15",
+        "label": "Ориентир: подача до 15 июля 2027"
+      }
+    ],
+    "summary": "Зелёная европейская столица и сильный университет для IT-профиля.",
+    "highlights": [
+      "Компактный город",
+      "IT-направление",
+      "Доступный бюджет"
+    ],
+    "sources": [
+      {
+        "label": "Официальный сайт вуза",
+        "url": "https://www.uni-lj.si/eng/"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 70,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "uporto-data",
+    "university": "University of Porto",
+    "programName": "Data Science, B.Sc. (на английском)",
+    "country": "Португалия",
+    "countryCode": "PT",
+    "city": "Порту",
+    "field": "Data Science и аналитика",
+    "tags": [
+      "data",
+      "it"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 3,
+    "language": "Английский",
+    "ieltsMin": 6,
+    "tuitionPerYearUsd": 4200,
+    "livingPerYearUsd": 9600,
+    "scholarship": "partial",
+    "scholarshipNote": "Merit-поддержка и скидки — уточняй у факультета",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2027-06-30",
+        "label": "Ориентир: подача до 30 июня 2027"
+      }
+    ],
+    "summary": "Технический и исследовательский центр на севере Португалии.",
+    "highlights": [
+      "Data и аналитика",
+      "Атлантический кампус",
+      "Умеренная стоимость"
+    ],
+    "sources": [
+      {
+        "label": "Официальный сайт вуза",
+        "url": "https://www.up.pt/portal/en/"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 70,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "ulisboa-cs",
+    "university": "University of Lisbon",
+    "programName": "Computer Science, B.Sc. (на английском)",
+    "country": "Португалия",
+    "countryCode": "PT",
+    "city": "Лиссабон",
+    "field": "IT и Computer Science",
+    "tags": [
+      "it",
+      "data"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 3,
+    "language": "Английский",
+    "ieltsMin": 6,
+    "tuitionPerYearUsd": 5200,
+    "livingPerYearUsd": 10800,
+    "scholarship": "partial",
+    "scholarshipNote": "Merit-поддержка — проверяй условия программы",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2027-06-30",
+        "label": "Ориентир: подача до 30 июня 2027"
+      }
+    ],
+    "summary": "Большой городской университет с доступом к стартап-сцене Лиссабона.",
+    "highlights": [
+      "Городская tech-сцена",
+      "Англоязычный трек",
+      "Мягкий климат"
+    ],
+    "sources": [
+      {
+        "label": "Официальный сайт вуза",
+        "url": "https://www.ulisboa.pt/en"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 72,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "unipd-eng",
+    "university": "University of Padua",
+    "programName": "Information Engineering, B.Sc. (на английском)",
+    "country": "Италия",
+    "countryCode": "IT",
+    "city": "Падуя",
+    "field": "Инженерия",
+    "tags": [
+      "engineering",
+      "it"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 3,
+    "language": "Английский",
+    "ieltsMin": 6,
+    "tuitionPerYearUsd": 3600,
+    "livingPerYearUsd": 9600,
+    "scholarship": "partial",
+    "scholarshipNote": "Региональные и merit-стипендии — уточняй условия",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2027-05-02",
+        "label": "Ориентир: подача до 2 мая 2027"
+      }
+    ],
+    "summary": "Исторический итальянский университет с сильной инженерной школой.",
+    "highlights": [
+      "Инженерный трек",
+      "Доступная Северная Италия",
+      "Стипендии региона"
+    ],
+    "sources": [
+      {
+        "label": "Официальный сайт вуза",
+        "url": "https://www.unipd.it/en/"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 72,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "polito-eng",
+    "university": "Politecnico di Torino",
+    "programName": "Engineering and Management, B.Sc. (на английском)",
+    "country": "Италия",
+    "countryCode": "IT",
+    "city": "Турин",
+    "field": "Инженерия",
+    "tags": [
+      "engineering",
+      "business"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 3,
+    "language": "Английский",
+    "ieltsMin": 6,
+    "tuitionPerYearUsd": 4200,
+    "livingPerYearUsd": 10200,
+    "scholarship": "partial",
+    "scholarshipNote": "Merit-стипендии и региональная поддержка — по конкурсу",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2027-04-30",
+        "label": "Ориентир: подача до 30 апреля 2027"
+      }
+    ],
+    "summary": "Технический университет с сочетанием инженерии, индустрии и менеджмента.",
+    "highlights": [
+      "Технический фокус",
+      "Город автопрома",
+      "Региональные стипендии"
+    ],
+    "sources": [
+      {
+        "label": "Официальный сайт вуза",
+        "url": "https://www.polito.it/en"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 75,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "oxford-cs",
+    "university": "University of Oxford",
+    "programName": "Computer Science, BA / MCompSci",
+    "country": "Великобритания",
+    "countryCode": "GB",
+    "city": "Оксфорд",
+    "field": "IT и Computer Science",
+    "tags": [
+      "it",
+      "data"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 3,
+    "language": "Английский",
+    "ieltsMin": 7,
+    "tuitionPerYearUsd": 57000,
+    "livingPerYearUsd": 21000,
+    "scholarship": "partial",
+    "scholarshipNote": "Конкурсные стипендии колледжей и внешних фондов",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2026-10-15",
+        "label": "Ориентир: UCAS до 15 октября 2026"
+      }
+    ],
+    "summary": "Амбициозный выбор для сильной математики, алгоритмов и академического Computer Science.",
+    "highlights": [
+      "Амбициозный выбор",
+      "Тьюториалы в малых группах",
+      "Сильная математика"
+    ],
+    "sources": [
+      {
+        "label": "Официальная программа",
+        "url": "https://www.ox.ac.uk/admissions/undergraduate/courses/course-listing/computer-science"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 95,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "cambridge-cs",
+    "university": "University of Cambridge",
+    "programName": "Computer Science, BA / MEng",
+    "country": "Великобритания",
+    "countryCode": "GB",
+    "city": "Кембридж",
+    "field": "IT и Computer Science",
+    "tags": [
+      "it",
+      "data",
+      "engineering"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 3,
+    "language": "Английский",
+    "ieltsMin": 7.5,
+    "tuitionPerYearUsd": 54000,
+    "livingPerYearUsd": 21000,
+    "scholarship": "partial",
+    "scholarshipNote": "Финансирование зависит от колледжа и внешних программ",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2026-10-15",
+        "label": "Ориентир: UCAS до 15 октября 2026"
+      }
+    ],
+    "summary": "Амбициозная программа на стыке математики, инженерии и фундаментального Computer Science.",
+    "highlights": [
+      "Амбициозный выбор",
+      "Колледжная система",
+      "Теория и практика"
+    ],
+    "sources": [
+      {
+        "label": "Официальная программа",
+        "url": "https://www.undergraduate.study.cam.ac.uk/courses/computer-science-ba-hons-meng"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 95,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "imperial-computing",
+    "university": "Imperial College London",
+    "programName": "Computing, BEng",
+    "country": "Великобритания",
+    "countryCode": "GB",
+    "city": "Лондон",
+    "field": "IT и Computer Science",
+    "tags": [
+      "it",
+      "engineering",
+      "data"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 3,
+    "language": "Английский",
+    "ieltsMin": 7,
+    "tuitionPerYearUsd": 56000,
+    "livingPerYearUsd": 24500,
+    "scholarship": "partial",
+    "scholarshipNote": "Конкурсные scholarship и bursary для сильных кандидатов",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2027-01-13",
+        "label": "Ориентир: UCAS до 13 января 2027"
+      }
+    ],
+    "summary": "Лондонский инженерный кампус для сильного профиля в software, systems и AI.",
+    "highlights": [
+      "Амбициозный выбор",
+      "Инженерные проекты",
+      "Лондонский tech-рынок"
+    ],
+    "sources": [
+      {
+        "label": "Официальная программа",
+        "url": "https://www.imperial.ac.uk/study/courses/undergraduate/computing-beng/"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 92,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "ucl-cs",
+    "university": "University College London",
+    "programName": "Computer Science, B.Sc.",
+    "country": "Великобритания",
+    "countryCode": "GB",
+    "city": "Лондон",
+    "field": "IT и Computer Science",
+    "tags": [
+      "it",
+      "data"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 3,
+    "language": "Английский",
+    "ieltsMin": 7,
+    "tuitionPerYearUsd": 61000,
+    "livingPerYearUsd": 24500,
+    "scholarship": "partial",
+    "scholarshipNote": "Конкурсные стипендии UCL и внешние фонды",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2027-01-13",
+        "label": "Ориентир: UCAS до 13 января 2027"
+      }
+    ],
+    "summary": "Городской исследовательский университет для тех, кому важны Computer Science и индустриальные проекты.",
+    "highlights": [
+      "Лондон",
+      "Industry Exchange Network",
+      "AI и data electives"
+    ],
+    "sources": [
+      {
+        "label": "Официальная программа",
+        "url": "https://www.ucl.ac.uk/study/prospective-students/undergraduate/courses/computer-science-bsc"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 90,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "edinburgh-informatics",
+    "university": "University of Edinburgh",
+    "programName": "Informatics, B.Sc.",
+    "country": "Великобритания",
+    "countryCode": "GB",
+    "city": "Эдинбург",
+    "field": "IT и Computer Science",
+    "tags": [
+      "it",
+      "data",
+      "engineering"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 4,
+    "language": "Английский",
+    "ieltsMin": 6.5,
+    "tuitionPerYearUsd": 43000,
+    "livingPerYearUsd": 18000,
+    "scholarship": "partial",
+    "scholarshipNote": "Merit-стипендии и поддержка школы Informatics — по конкурсу",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2027-01-31",
+        "label": "Ориентир: подача до 31 января 2027"
+      }
+    ],
+    "summary": "Сильная информатика, AI-исследования и студенческий город вне сверхдорогого Лондона.",
+    "highlights": [
+      "AI и robotics",
+      "4-летний бакалавриат",
+      "Сильный студенческий город"
+    ],
+    "sources": [
+      {
+        "label": "Официальный сайт Informatics",
+        "url": "https://www.ed.ac.uk/informatics"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 85,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "mit-cse",
+    "university": "Massachusetts Institute of Technology",
+    "programName": "Computer Science and Engineering, SB",
+    "country": "США",
+    "countryCode": "US",
+    "city": "Кембридж",
+    "field": "IT и Computer Science",
+    "tags": [
+      "it",
+      "engineering",
+      "data"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 4,
+    "language": "Английский",
+    "ieltsMin": 7,
+    "tuitionPerYearUsd": 63000,
+    "livingPerYearUsd": 24000,
+    "scholarship": "full",
+    "scholarshipNote": "Need-based financial aid — условия зависят от финансового профиля семьи",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2027-01-05",
+        "label": "Ориентир: Regular Action до 5 января 2027"
+      }
+    ],
+    "summary": "Максимально амбициозный инженерный вариант: systems, algorithms, AI и проектная культура.",
+    "highlights": [
+      "Амбициозный выбор",
+      "UROP-исследования",
+      "CSE и AI-треки"
+    ],
+    "sources": [
+      {
+        "label": "Официальный каталог EECS",
+        "url": "https://catalog.mit.edu/schools/engineering/electrical-engineering-computer-science/"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 96,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "stanford-cs",
+    "university": "Stanford University",
+    "programName": "Computer Science, BS",
+    "country": "США",
+    "countryCode": "US",
+    "city": "Стэнфорд",
+    "field": "IT и Computer Science",
+    "tags": [
+      "it",
+      "data",
+      "business"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 4,
+    "language": "Английский",
+    "ieltsMin": 7,
+    "tuitionPerYearUsd": 66000,
+    "livingPerYearUsd": 26000,
+    "scholarship": "full",
+    "scholarshipNote": "Need-based financial aid; не закладывай её в бюджет без подтверждения",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2027-01-05",
+        "label": "Ориентир: Regular Decision до 5 января 2027"
+      }
+    ],
+    "summary": "Амбициозная карточка для AI, startup-культуры и связей с Кремниевой долиной.",
+    "highlights": [
+      "Амбициозный выбор",
+      "Silicon Valley",
+      "AI и entrepreneurship"
+    ],
+    "sources": [
+      {
+        "label": "Официальный сайт Computer Science",
+        "url": "https://www.cs.stanford.edu/academics/undergraduate"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 96,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "cmu-cs",
+    "university": "Carnegie Mellon University",
+    "programName": "Computer Science, BS",
+    "country": "США",
+    "countryCode": "US",
+    "city": "Питтсбург",
+    "field": "IT и Computer Science",
+    "tags": [
+      "it",
+      "data",
+      "engineering"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 4,
+    "language": "Английский",
+    "ieltsMin": 7,
+    "tuitionPerYearUsd": 67000,
+    "livingPerYearUsd": 19000,
+    "scholarship": "partial",
+    "scholarshipNote": "Конкурсная финансовая помощь и scholarship",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2027-01-03",
+        "label": "Ориентир: Regular Decision до 3 января 2027"
+      }
+    ],
+    "summary": "Сильный выбор для углублённого Computer Science, AI, robotics и продуктового мышления.",
+    "highlights": [
+      "Амбициозный выбор",
+      "AI и robotics",
+      "Проектная среда"
+    ],
+    "sources": [
+      {
+        "label": "Официальный сайт School of Computer Science",
+        "url": "https://www.cs.cmu.edu/"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 94,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "berkeley-eecs",
+    "university": "University of California, Berkeley",
+    "programName": "Electrical Engineering and Computer Sciences, BS",
+    "country": "США",
+    "countryCode": "US",
+    "city": "Беркли",
+    "field": "IT и Computer Science",
+    "tags": [
+      "it",
+      "engineering",
+      "data"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 4,
+    "language": "Английский",
+    "ieltsMin": 7,
+    "tuitionPerYearUsd": 50000,
+    "livingPerYearUsd": 25000,
+    "scholarship": "partial",
+    "scholarshipNote": "Поддержка для международных студентов ограничена и конкурсна",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2026-11-30",
+        "label": "Ориентир: UC application до 30 ноября 2026"
+      }
+    ],
+    "summary": "Публичный исследовательский кампус рядом с Bay Area для EECS, data и стартапов.",
+    "highlights": [
+      "Амбициозный выбор",
+      "Bay Area",
+      "EECS и research"
+    ],
+    "sources": [
+      {
+        "label": "Официальный сайт EECS",
+        "url": "https://eecs.berkeley.edu/"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 93,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "gatech-cs",
+    "university": "Georgia Institute of Technology",
+    "programName": "Computer Science, BS",
+    "country": "США",
+    "countryCode": "US",
+    "city": "Атланта",
+    "field": "IT и Computer Science",
+    "tags": [
+      "it",
+      "engineering",
+      "data"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 4,
+    "language": "Английский",
+    "ieltsMin": 6.5,
+    "tuitionPerYearUsd": 35000,
+    "livingPerYearUsd": 18000,
+    "scholarship": "partial",
+    "scholarshipNote": "Конкурсные scholarships; проверяй требования для international applicants",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2027-01-04",
+        "label": "Ориентир: Regular Decision до 4 января 2027"
+      }
+    ],
+    "summary": "Практичный и очень сильный инженерный выбор в США с более реалистичной стоимостью, чем частные топы.",
+    "highlights": [
+      "Сильная инженерия",
+      "Atlanta tech-сцена",
+      "Практические треки"
+    ],
+    "sources": [
+      {
+        "label": "Официальная программа",
+        "url": "https://www.cc.gatech.edu/degree-programs/bachelors-computer-science"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 85,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "tsinghua-cs",
+    "university": "Tsinghua University",
+    "programName": "Computer Science and Technology, B.Eng.",
+    "country": "Китай",
+    "countryCode": "CN",
+    "city": "Пекин",
+    "field": "IT и Computer Science",
+    "tags": [
+      "it",
+      "engineering",
+      "data"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 4,
+    "language": "Китайский / Английский",
+    "ieltsMin": 6.5,
+    "tuitionPerYearUsd": 4800,
+    "livingPerYearUsd": 9000,
+    "scholarship": "full",
+    "scholarshipNote": "Chinese Government Scholarship и гранты университета — конкурсные",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2027-02-28",
+        "label": "Ориентир: подача до 28 февраля 2027"
+      }
+    ],
+    "summary": "Амбициозная инженерная карточка для AI, Computer Science и технологической экосистемы Пекина.",
+    "highlights": [
+      "Амбициозный выбор",
+      "AI и engineering",
+      "Проверь язык трека"
+    ],
+    "sources": [
+      {
+        "label": "Официальные программы для иностранцев",
+        "url": "https://www.tsinghua.edu.cn/en/Admissions/International_Students1/Undergraduate_Programs.htm"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 93,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "pku-cs",
+    "university": "Peking University",
+    "programName": "Computer Science, B.Sc.",
+    "country": "Китай",
+    "countryCode": "CN",
+    "city": "Пекин",
+    "field": "IT и Computer Science",
+    "tags": [
+      "it",
+      "data"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 4,
+    "language": "Китайский / Английский",
+    "ieltsMin": 6.5,
+    "tuitionPerYearUsd": 5200,
+    "livingPerYearUsd": 9000,
+    "scholarship": "full",
+    "scholarshipNote": "Chinese Government Scholarship и гранты PKU — по конкурсу",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2027-02-28",
+        "label": "Ориентир: подача до 28 февраля 2027"
+      }
+    ],
+    "summary": "Исследовательский выбор для CS, data и фундаментальной подготовки в Пекине.",
+    "highlights": [
+      "Амбициозный выбор",
+      "CS и data треки",
+      "Проверь язык трека"
+    ],
+    "sources": [
+      {
+        "label": "Официальная подача для international students",
+        "url": "https://www.isd.pku.edu.cn/en/undergraduate.php"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 93,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "sjtu-cs",
+    "university": "Shanghai Jiao Tong University",
+    "programName": "Computer Science and Technology, B.Eng.",
+    "country": "Китай",
+    "countryCode": "CN",
+    "city": "Шанхай",
+    "field": "IT и Computer Science",
+    "tags": [
+      "it",
+      "engineering",
+      "data"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 4,
+    "language": "Китайский / Английский",
+    "ieltsMin": 6.5,
+    "tuitionPerYearUsd": 6500,
+    "livingPerYearUsd": 12000,
+    "scholarship": "partial",
+    "scholarshipNote": "Shanghai Government Scholarship и гранты SJTU — по конкурсу",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2027-03-31",
+        "label": "Ориентир: подача до 31 марта 2027"
+      }
+    ],
+    "summary": "Технологический университет Шанхая для engineering, software и интернационального города.",
+    "highlights": [
+      "Шанхай",
+      "Engineering-фокус",
+      "Проверь язык трека"
+    ],
+    "sources": [
+      {
+        "label": "Официальный сайт вуза",
+        "url": "https://en.sjtu.edu.cn/"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 88,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "zju-cs",
+    "university": "Zhejiang University",
+    "programName": "Computer Science and Technology, B.Eng.",
+    "country": "Китай",
+    "countryCode": "CN",
+    "city": "Ханчжоу",
+    "field": "IT и Computer Science",
+    "tags": [
+      "it",
+      "data",
+      "engineering"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 4,
+    "language": "Китайский / Английский",
+    "ieltsMin": 6.5,
+    "tuitionPerYearUsd": 5200,
+    "livingPerYearUsd": 9600,
+    "scholarship": "partial",
+    "scholarshipNote": "Chinese Government Scholarship и гранты Zhejiang University",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2027-02-28",
+        "label": "Ориентир: подача до 28 февраля 2027"
+      }
+    ],
+    "summary": "Сильная инженерная и исследовательская среда в Ханчжоу, рядом с крупной технологической экосистемой.",
+    "highlights": [
+      "Ханчжоу tech-сцена",
+      "AI и engineering",
+      "Проверь язык трека"
+    ],
+    "sources": [
+      {
+        "label": "Официальный сайт вуза",
+        "url": "https://www.zju.edu.cn/english/"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 86,
+    "scholarshipLivingSupportUsd": 0
+  },
+  {
+    "id": "fudan-cs",
+    "university": "Fudan University",
+    "programName": "Computer Science and Technology, B.Sc.",
+    "country": "Китай",
+    "countryCode": "CN",
+    "city": "Шанхай",
+    "field": "IT и Computer Science",
+    "tags": [
+      "it",
+      "data",
+      "business"
+    ],
+    "degree": "Бакалавриат",
+    "durationYears": 4,
+    "language": "Китайский / Английский",
+    "ieltsMin": 6.5,
+    "tuitionPerYearUsd": 6500,
+    "livingPerYearUsd": 12000,
+    "scholarship": "partial",
+    "scholarshipNote": "Гранты Fudan и Shanghai Government Scholarship — по конкурсу",
+    "deadlines": [
+      {
+        "intake": "Осень 2027",
+        "date": "2027-02-28",
+        "label": "Ориентир: подача до 28 февраля 2027"
+      }
+    ],
+    "summary": "Городской исследовательский университет Шанхая для Computer Science и data-профиля.",
+    "highlights": [
+      "Шанхай",
+      "CS и data",
+      "Проверь язык трека"
+    ],
+    "sources": [
+      {
+        "label": "Официальный сайт вуза",
+        "url": "https://www.fudan.edu.cn/en/"
+      }
+    ],
+    "demo": true,
+    "gpaMinPercent": 86,
+    "scholarshipLivingSupportUsd": 0
   }
 ]

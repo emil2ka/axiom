@@ -394,6 +394,16 @@ export function selectNextQuestion(
     return fields.some((field) => fact(memories, field) === undefined);
   });
 
+  // Пока не собран каркас профиля, не перепрыгиваем к уточнениям вроде
+  // ограничений: они часто дают большой статистический сдвиг, но без страны,
+  // бюджета, IELTS и направления объяснение подбора остаётся пустым.
+  const missingCore = CORE_FIELDS.some((field) => fact(memories, field) === undefined);
+  const prioritizedCandidates = missingCore ? candidates.filter((question) => question.core) : candidates;
+  // Пользователь мог уже ответить «не знаю» на каждый ключевой вопрос: факт
+  // тогда не появится, но интервью всё равно должно перейти к оставшимся
+  // уточнениям, а не завершиться на пустом списке.
+  const candidatesToRank = prioritizedCandidates.length ? prioritizedCandidates : candidates;
+
   if (!candidates.length) {
     // Вопросы кончились — это не то же самое, что «профиль собран». На «не знаю»
     // факт не появляется, и заявлять обратное значит врать в глаза человеку,
@@ -414,7 +424,7 @@ export function selectNextQuestion(
     };
   }
 
-  const ranked = candidates
+  const ranked = candidatesToRank
     .map((question) => {
       const unknown = (question.fields ?? []).filter((field) => fact(memories, field) === undefined);
       const impact = unknown.length

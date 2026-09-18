@@ -55,6 +55,9 @@ export const EUROPE_COUNTRIES = new Set([
   "Бельгия",
   "Португалия",
   "Ирландия",
+  "Эстония",
+  "Латвия",
+  "Словения",
   "Швейцария",
   "Франция",
 ]);
@@ -393,7 +396,8 @@ function scoreComponents(program: Program, ctx: ScoreContext): ScoredParts {
   }
 
   let languageComponent = 1;
-  if (program.language !== "Английский") {
+  const hasEnglishTrack = program.language.includes("Английский");
+  if (program.language !== "Английский" && !hasEnglishTrack) {
     if (ctx.knownLanguages.includes(program.language)) {
       languageComponent = 1;
       reasons.push({
@@ -414,6 +418,20 @@ function scoreComponents(program: Program, ctx: ScoreContext): ScoredParts {
       gaps.push({
         text: `Обучение на языке: ${program.language} — потребуется подтверждение уровня B2`,
         severity: "medium",
+      });
+    }
+  } else if (hasEnglishTrack && program.language !== "Английский") {
+    languageComponent = 0.78;
+    if (ctx.constraints.englishOnly) {
+      reasons.push({
+        text: `Есть англоязычный трек — перед подачей проверь язык именно выбранной программы`,
+        weight: w.language * languageComponent,
+        field: "constraints",
+      });
+    } else {
+      gaps.push({
+        text: `У вуза есть английский трек, но язык выбранной программы нужно подтвердить`,
+        severity: "low",
       });
     }
   } else if (ctx.constraints.englishOnly) {
