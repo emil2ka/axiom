@@ -8,7 +8,7 @@ function Svg({ className, children }: IconProps & { children: React.ReactNode })
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth={1.8}
+      strokeWidth={1.5}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
@@ -24,6 +24,26 @@ export function IconSparkles(p: IconProps) {
     <Svg {...p}>
       <path d="m12 3 1.9 5.6L19.5 10l-5.6 1.4L12 17.5l-1.9-6.1L4.5 10l5.6-1.4L12 3Z" />
       <path d="m18.5 15.5.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2Z" />
+    </Svg>
+  );
+}
+
+export function IconVolume(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M11 5.5 6.5 9H3.5v6h3L11 18.5v-13Z" />
+      <path d="M15.3 8.8a4.5 4.5 0 0 1 0 6.4" />
+      <path d="M17.8 6.3a8 8 0 0 1 0 11.4" />
+    </Svg>
+  );
+}
+
+export function IconVolumeOff(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M11 5.5 6.5 9H3.5v6h3L11 18.5v-13Z" />
+      <path d="M15.5 9.5l4 4" />
+      <path d="M19.5 9.5l-4 4" />
     </Svg>
   );
 }

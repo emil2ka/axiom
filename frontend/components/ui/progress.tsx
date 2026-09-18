@@ -3,9 +3,9 @@ import { cn } from "@/lib/utils";
 type Tone = "violet" | "teal" | "amber";
 
 const GRADIENTS: Record<Tone, string> = {
-  violet: "from-violet-500 to-teal-400",
-  teal: "from-teal-400 to-violet-400",
-  amber: "from-amber-400 to-rose-400",
+  violet: "bg-violet-500",
+  teal: "bg-teal-400",
+  amber: "bg-amber-400",
 };
 
 export function ProgressBar({
@@ -29,7 +29,7 @@ export function ProgressBar({
       className={cn("w-full overflow-hidden rounded-full bg-white/[0.07]", size === "sm" ? "h-1.5" : "h-2.5", className)}
     >
       <div
-        className={cn("h-full rounded-full bg-gradient-to-r transition-[width] duration-700 ease-out", GRADIENTS[tone])}
+        className={cn("h-full rounded-full transition-[width] duration-700 ease-out", GRADIENTS[tone])}
         style={{ width: `${clamped}%` }}
       />
     </div>
@@ -37,10 +37,10 @@ export function ProgressBar({
 }
 
 function ringColor(value: number): string {
-  if (value >= 78) return "#46e2c7";
-  if (value >= 62) return "#a293ff";
-  if (value >= 45) return "#ffb964";
-  return "#ff7189";
+  if (value >= 78) return "#86c9a8";
+  if (value >= 62) return "#6fb3ee";
+  if (value >= 45) return "#e3c179";
+  return "#e08a7b";
 }
 
 export function ScoreRing({

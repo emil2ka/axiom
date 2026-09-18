@@ -4,12 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { StepGuard } from "@/components/shell/step-guard";
 import { NextStepBar } from "@/components/shell/next-step-bar";
-import { Card, SectionHeading } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ProgressBar, ScoreRing } from "@/components/ui/progress";
-import { InfoNote } from "@/components/ui/note";
+import { SectionHeading } from "@/components/ui/card";
 import { MemoryPanel } from "@/components/flow/memory-chips";
-import { IconAlert, IconCircleCheck, IconTarget } from "@/components/icons";
 import { diagnose } from "@/lib/shared/engine";
 import type { Diagnosis } from "@/lib/shared/engine";
 import { diagnoseSmart } from "@/lib/api";
@@ -20,17 +16,14 @@ export default function DiagnosisPage() {
   const overrideMemory = useAxiomStore((state) => state.overrideMemory);
   const removeMemory = useAxiomStore((state) => state.removeMemory);
   const [diagnosis, setDiagnosis] = useState<Diagnosis>(() => diagnose(memories));
-  const [engine, setEngine] = useState<"rules" | "llm">("rules");
 
   useEffect(() => {
     const local = diagnose(memories);
     setDiagnosis(local);
-    setEngine("rules");
     let cancelled = false;
     void diagnoseSmart(memories).then((result) => {
       if (cancelled || !result?.strengths) return;
       setDiagnosis(result);
-      setEngine(result.engine === "llm" ? "llm" : "rules");
     });
     return () => {
       cancelled = true;
@@ -41,89 +34,70 @@ export default function DiagnosisPage() {
     <StepGuard>
       <SectionHeading
         eyebrow="Шаг 2 из 6"
-        title="Диагностика профиля"
-        description="Короткое резюме: кто ты, какая цель, что уже играет в твою пользу и что ограничивает выбор."
-        right={
-          <Badge tone={engine === "llm" ? "teal" : "neutral"} dot>
-            {engine === "llm" ? "AI-резюме (LLM)" : "Резюме на правилах"}
-          </Badge>
-        }
+        title="Твоя траектория"
+        description="Твоё направление и то, что стоит учесть перед выбором университета."
         className="mb-6"
       />
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="space-y-5">
-          <Card>
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-7">
-              <div className="flex items-center gap-4">
-                <ScoreRing value={diagnosis.completeness} size={84} label="профиль" />
-                <div className="text-[12.5px] leading-relaxed text-mist-400">
-                  <p className="font-display text-sm font-semibold text-mist-100">Полнота профиля</p>
-                  <p className="mt-1">
-                    {diagnosis.knownFacts} из {diagnosis.totalCoreFacts} ключевых фактов
-                  </p>
-                  <div className="mt-2 w-40">
-                    <ProgressBar value={diagnosis.completeness} size="sm" />
-                  </div>
-                </div>
-              </div>
-              <div className="flex-1 space-y-2.5 sm:border-l sm:border-line-soft sm:pl-7">
-                <p className="text-[13.5px] leading-relaxed text-mist-200">{diagnosis.summary}</p>
-                <p className="flex items-start gap-2 text-[12.5px] leading-relaxed text-mist-400">
-                  <IconTarget className="mt-0.5 h-4 w-4 shrink-0 text-violet-300" />
-                  <span>
-                    <span className="text-mist-300">Цель: </span>
-                    {diagnosis.goal}
-                  </span>
-                </p>
-              </div>
+      <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-16">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-mist-500">Твоя цель</p>
+          <h3 className="mt-3 max-w-[19ch] font-display text-[30px] font-medium leading-[1.15] tracking-[-0.04em] text-mist-50 sm:text-[40px]">
+            {diagnosis.goal}
+          </h3>
+          <div className="mt-9 flex items-center gap-4">
+            <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/[0.08]">
+              <div className="h-full rounded-full bg-violet-300 transition-[width] duration-700" style={{ width: `${diagnosis.completeness}%` }} />
             </div>
-          </Card>
-
-          <div className="grid gap-5 md:grid-cols-2">
-            <Card>
-              <h3 className="flex items-center gap-2 font-display text-sm font-semibold text-mist-50">
-                <IconCircleCheck className="h-4.5 w-4.5 text-teal-400" />
-                Сильные стороны
-              </h3>
-              <ul className="mt-3.5 space-y-2.5">
-                {diagnosis.strengths.map((item) => (
-                  <li key={item} className="flex items-start gap-2.5 text-[13px] leading-relaxed text-mist-300">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-teal-400" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </Card>
-
-            <Card>
-              <h3 className="flex items-center gap-2 font-display text-sm font-semibold text-mist-50">
-                <IconAlert className="h-4.5 w-4.5 text-amber-400" />
-                Ограничения
-              </h3>
-              <ul className="mt-3.5 space-y-2.5">
-                {diagnosis.constraints.map((item) => (
-                  <li key={item} className="flex items-start gap-2.5 text-[13px] leading-relaxed text-mist-300">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </Card>
+            <span className="shrink-0 text-[11px] text-mist-500">Профиль {diagnosis.knownFacts}/{diagnosis.totalCoreFacts}</span>
           </div>
-
-          <InfoNote tone="info">
-            Диагностика — честная оценка по твоим ответам, а не гарантия поступления. Дальше AXIOM подберёт вузы и объяснит
-            каждую рекомендацию.
-          </InfoNote>
+          <div className="mt-12 grid gap-10 sm:grid-cols-2">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.16em] text-teal-300">Твоя опора</p>
+              <ul className="mt-4 space-y-3">
+                {(diagnosis.strengths.length ? diagnosis.strengths : ["Направление уже определено."])
+                  .slice(0, 3)
+                  .map((item) => (
+                    <li
+                      key={item}
+                      className="flex max-w-[36ch] items-start gap-3 text-[14px] leading-[1.6] text-mist-300"
+                    >
+                      <span className="mt-[10px] h-px w-2.5 shrink-0 bg-teal-400/70" />
+                      {item}
+                    </li>
+                  ))}
+              </ul>
+            </div>
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.16em] text-amber-300">Стоит учесть</p>
+              <ul className="mt-4 space-y-3">
+                {(diagnosis.constraints.length ? diagnosis.constraints : ["Серьёзных ограничений пока не видно."])
+                  .slice(0, 3)
+                  .map((item) => (
+                    <li
+                      key={item}
+                      className="flex max-w-[36ch] items-start gap-3 text-[14px] leading-[1.6] text-mist-300"
+                    >
+                      <span className="mt-[10px] h-px w-2.5 shrink-0 bg-amber-400/70" />
+                      {item}
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-4 lg:sticky lg:top-28">
-          <MemoryPanel facts={memories} editable onUpdate={overrideMemory} onRemove={removeMemory} />
-          <Link href="/interview" className="block text-[12.5px] text-violet-300 transition-colors hover:text-violet-200">
-            Изменить ответы интервью →
-          </Link>
-        </div>
+        <details open className="group lg:sticky lg:top-28">
+          <summary className="cursor-pointer list-none border-b border-white/10 pb-4 text-[13px] text-mist-300 marker:hidden">
+            Все факты профиля <span className="float-right text-mist-600">{memories.length} · <span className="group-open:hidden">+</span><span className="hidden group-open:inline">−</span></span>
+          </summary>
+          <div className="space-y-4 pt-5">
+            <MemoryPanel facts={memories} editable onUpdate={overrideMemory} onRemove={removeMemory} />
+            <Link href="/interview" className="block text-[12.5px] text-violet-300 transition-colors hover:text-violet-200">
+              Изменить ответы интервью →
+            </Link>
+          </div>
+        </details>
       </div>
 
       <NextStepBar backHref="/interview" backLabel="К интервью" nextHref="/recommendations" nextLabel="К рекомендациям" />

@@ -45,7 +45,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
       className={cn("flex w-full gap-3", isAxiom ? "justify-start" : "justify-end")}
     >
       {isAxiom ? (
-        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/30 to-teal-400/20 text-violet-300">
+        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] border border-line bg-white/[0.04] text-violet-300">
           <IconSparkles className="h-4 w-4" />
         </span>
       ) : null}
@@ -185,7 +185,7 @@ export function ChatInterview({ onOpenManual }: { onOpenManual: () => void }) {
         ))}
         {typing ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-3">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/30 to-teal-400/20 text-violet-300">
+            <span className="flex h-8 w-8 items-center justify-center rounded-[9px] border border-line bg-white/[0.04] text-violet-300">
               <IconSparkles className="h-4 w-4" />
             </span>
             <span className="rounded-2xl border border-line-soft bg-white/[0.04] px-4 py-3">

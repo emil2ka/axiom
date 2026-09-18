@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { IconCircleCheck, IconRefresh } from "@/components/icons";
 import { ProgressBar } from "@/components/ui/progress";
 import { FLOW_STEPS, findStepIndex } from "@/lib/flow";
+import { DemoSeed } from "@/components/shell/demo-seed";
 import { useHydrated } from "@/lib/hooks";
 import { useAxiomStore } from "@/lib/store";
 import { pluralRu } from "@/lib/shared/engine";
@@ -45,14 +46,14 @@ function Stepper({ currentIndex }: { currentIndex: number }) {
                     className={cn(
                       "flex h-4.5 w-4.5 items-center justify-center rounded-full border text-[10.5px] tabular-nums",
                       state === "current"
-                        ? "border-transparent bg-gradient-to-br from-violet-500 to-violet-600 text-white"
+                        ? "border-transparent bg-violet-500 text-ink-950"
                         : "border-line text-mist-500",
                     )}
                   >
                     {index + 1}
                   </span>
                 )}
-                <span className="hidden xl:inline">{step.short}</span>
+                <span className="hidden whitespace-nowrap xl:inline">{step.short}</span>
               </Link>
             </li>
           );
@@ -88,6 +89,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-dvh flex-col">
+      <DemoSeed />
       <header className="sticky top-0 z-40 border-b border-line-soft bg-ink-950/80 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <Link href="/" aria-label="AXIOM — на главную" className="shrink-0">
@@ -97,14 +99,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Stepper currentIndex={currentIndex} />
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            {hydrated && demoMode ? (
-              <Badge tone="teal" dot className="hidden sm:inline-flex">
-                Демо-профиль
-              </Badge>
-            ) : null}
             {hydrated && memoriesCount > 0 ? (
-              <Badge tone="violet">
-                Память: {memoriesCount} {pluralRu(memoriesCount, "факт", "факта", "фактов")}
+              <Badge tone={demoMode ? "teal" : "violet"} dot className="hidden sm:inline-flex">
+                {demoMode ? "Демо" : "Память"}: {memoriesCount} {pluralRu(memoriesCount, "факт", "факта", "фактов")}
               </Badge>
             ) : null}
             {hydrated && memoriesCount > 0 ? (
@@ -129,7 +126,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-4 py-6 text-[11.5px] leading-relaxed text-mist-500 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <p className="max-w-xl">
             Данные о программах — демонстрационные, проверяй условия и дедлайны на официальных сайтах вузов. Оценка
-            соответствия — не гарантия поступления.
+            соответствия — не гарантия поступления. Изображения кампусов используются как визуальные ориентиры.
           </p>
           <p className="shrink-0">
             <a

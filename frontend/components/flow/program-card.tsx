@@ -1,58 +1,18 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { ScoreRing } from "@/components/ui/progress";
-import {
-  IconAlert,
-  IconArrowRight,
-  IconCalendar,
-  IconCircleCheck,
-  IconExternal,
-  IconMapPin,
-  IconSparkles,
-  IconStar,
-  IconWallet,
-} from "@/components/icons";
+import Image from "next/image";
+import { IconExternal, IconStar } from "@/components/icons";
 import { formatDateRu, formatUsd } from "@/lib/shared/engine";
 import type { Recommendation } from "@/lib/shared/engine";
-import { durationLabel } from "@/lib/labels";
+import { BUILDINGS, TINTS } from "@/lib/campus-art";
 import { cn } from "@/lib/utils";
 
-function moneyBadge(item: Recommendation) {
-  if (item.budgetDeltaUsd === null) return null;
-  if (item.program.scholarship === "full") {
-    return (
-      <Badge tone="lime" dot>
-        Полная стипендия
-      </Badge>
-    );
-  }
-  if (item.budgetDeltaUsd >= 0) {
-    return (
-      <Badge tone="teal" dot>
-        В бюджет · запас {formatUsd(item.budgetDeltaUsd)}
-      </Badge>
-    );
-  }
-  return (
-    <Badge tone="rose" dot>
-      Выше бюджета на {formatUsd(Math.abs(item.budgetDeltaUsd))}
-    </Badge>
-  );
-}
-
 export function ProgramCard({
-  item,
-  favorite,
-  inCompare,
-  compareDisabled,
-  compareSelectionCount,
-  onToggleFavorite,
-  onToggleCompare,
-  onSetTarget,
+  item, featured = false, favorite, inCompare, compareDisabled, compareSelectionCount,
+  onToggleFavorite, onToggleCompare, onSetTarget,
 }: {
   item: Recommendation;
+  featured?: boolean;
   favorite: boolean;
   inCompare: boolean;
   compareDisabled: boolean;
@@ -63,147 +23,109 @@ export function ProgramCard({
 }) {
   const { program } = item;
   const deadline = program.deadlines[0];
+  const building = BUILDINGS[program.id] ?? "aalto";
+  const tint = TINTS[program.id] ?? "#252a2d";
+  const price = formatUsd(item.totalPerYearUsd);
+  const programName = program.programName.replace(/\s*\(на английском\)/i, "");
+  const longTitle = program.university.length > 34;
 
   return (
-    <Card hover className={cn("relative", inCompare && "border-violet-500/50")}>
-      <div className="flex flex-wrap items-start justify-between gap-5">
-        <div className="flex min-w-0 items-start gap-4">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-line bg-white/[0.04] font-display text-[13px] font-semibold tabular-nums text-mist-300">
-            {item.rank}
-          </span>
-          <div className="min-w-0">
-            <h3 className="font-display text-[15.5px] font-semibold leading-snug text-mist-50">{program.university}</h3>
-            <p className="mt-0.5 text-[12.5px] text-mist-400">{program.programName}</p>
-            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px] text-mist-500">
-              <span className="inline-flex items-center gap-1">
-                <IconMapPin className="h-3.5 w-3.5" />
-                {program.country}, {program.city}
-              </span>
-              <span>{durationLabel(program.durationYears)}</span>
-              <span>{program.language}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <ScoreRing value={item.score} size={62} stroke={5} />
-          <div className="text-right">
-            <p className="text-[12px] font-medium text-mist-200">{item.fitLabel}</p>
-            <p className="mt-1 text-[11px] text-mist-500">оценка соответствия, не прогноз</p>
-          </div>
-        </div>
+    <article
+      className={cn(
+        "group relative isolate flex flex-col overflow-hidden rounded-[7px] bg-[#151719] p-6 shadow-[0_28px_70px_-50px_rgba(0,0,0,.9)] transition-transform duration-500 hover:-translate-y-1",
+        featured
+          ? longTitle ? "min-h-[560px] sm:min-h-[590px] sm:p-10" : "min-h-[500px] sm:min-h-[550px] sm:p-10"
+          : "min-h-[470px] sm:min-h-[510px] sm:p-8",
+        inCompare && "outline outline-1 outline-white/30",
+      )}
+      style={{ backgroundImage: `radial-gradient(ellipse at 83% 65%, ${tint} 0%, #17191b 57%, #121416 100%)` }}
+    >
+      <div className={cn(
+        "pointer-events-none absolute z-0",
+        featured
+          ? "bottom-[24%] right-[-4%] top-[40%] w-[108%] sm:bottom-[18%] sm:right-[-3%] sm:top-[32%] sm:w-[66%]"
+          : "bottom-[27%] right-[-4%] top-[40%] w-[108%] sm:bottom-[30%] sm:right-[-3%] sm:top-[38%] sm:w-[73%]",
+      )}
+        aria-hidden="true"
+      >
+        <Image
+          src={`/campuses/cutouts/${building}.webp`}
+          alt=""
+          fill
+          sizes={featured ? "(max-width: 640px) 100vw, 66vw" : "(max-width: 640px) 100vw, 45vw"}
+          className="object-contain object-bottom opacity-95 transition-[transform,opacity] duration-700 ease-out group-hover:scale-[1.035] group-hover:opacity-100"
+          priority={featured}
+        />
       </div>
+      <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-r from-[#111315]/15 via-transparent to-transparent sm:from-[#111315]/45" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-28 bg-gradient-to-t from-[#0e1012] via-[#0e1012]/72 to-transparent" />
 
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        <Badge tone="neutral">
-          <IconWallet className="h-3.5 w-3.5" />
-          {formatUsd(item.totalPerYearUsd)}/год
-        </Badge>
-        {moneyBadge(item)}
-        <Badge tone="neutral">
-          <IconCalendar className="h-3.5 w-3.5" />
-          {deadline ? formatDateRu(deadline.date) : "дедлайн уточняется"}
-        </Badge>
-        <span className="inline-flex items-center gap-1.5 text-[11px]">
-          <Badge tone="violet" dot>
-            Демо-данные
-          </Badge>
-          {program.sources[0] ? (
-            <a
-              href={program.sources[0].url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1 text-mist-500 transition-colors hover:text-violet-300"
-            >
-              {program.sources[0].label}
-              <IconExternal className="h-3 w-3" />
-            </a>
-          ) : null}
+      <div className="relative z-10 flex items-start justify-between gap-5">
+        <span className="text-[11px] font-medium tracking-[0.18em] text-white/50">
+          {featured ? "ВАШ ПЕРВЫЙ ВЫБОР" : String(item.rank).padStart(2, "0")}
         </span>
+        <button
+          type="button"
+          onClick={() => onToggleFavorite(program.id)}
+          aria-label={favorite ? "Убрать из избранного" : "Добавить в избранное"}
+          aria-pressed={favorite}
+          className={cn("p-1.5 transition-colors", favorite ? "text-amber-300" : "text-white/45 hover:text-white")}
+        >
+          <IconStar className="h-[18px] w-[18px]" filled={favorite} />
+        </button>
       </div>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
-        <div>
-          <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-teal-300">
-            <IconSparkles className="h-3.5 w-3.5" />
-            Почему подходит
-          </p>
-          <ul className="mt-2 space-y-1.5">
-            {item.reasons.slice(0, 3).map((reason) => (
-              <li key={reason.text} className="flex items-start gap-2 text-[12.5px] leading-relaxed text-mist-300">
-                <IconCircleCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-teal-400" />
-                {reason.text}
-              </li>
-            ))}
-          </ul>
-        </div>
+      <div className={cn("relative z-10 mt-7 max-w-[86%] sm:max-w-[66%]", featured && "sm:max-w-[36%]")}>
+        <p className="text-[11px] tracking-[0.12em] text-white/60">
+          {program.city}, {program.country} · {program.language}
+        </p>
+        <h3 className={cn(
+          "mt-2 max-w-[18ch] font-display font-medium leading-[1.02] tracking-[-0.045em] text-white",
+          featured ? "text-[31px] sm:text-[42px]" : "text-[27px] sm:text-[34px]",
+        )}>
+          {program.university}
+        </h3>
+        <p className="mt-3 max-w-[27ch] text-[12px] leading-[1.5] text-white/65 sm:text-[13px]">
+          {programName}
+        </p>
+      </div>
 
-        {item.gaps.length ? (
+      <div className="relative z-10 mt-auto flex flex-wrap items-end justify-between gap-x-5 gap-y-4 pt-14">
+        <div className="flex items-end gap-5 sm:gap-7">
           <div>
-            <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-300">
-              <IconAlert className="h-3.5 w-3.5" />
-              Чего не хватает
-            </p>
-            <ul className="mt-2 space-y-1.5">
-              {item.gaps.slice(0, 3).map((gap) => (
-                <li key={gap.text} className="flex items-start gap-2 text-[12.5px] leading-relaxed text-mist-400">
-                  <span
-                    className={cn(
-                      "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full",
-                      gap.severity === "high" ? "bg-rose-400" : gap.severity === "medium" ? "bg-amber-400" : "bg-mist-500",
-                    )}
-                  />
-                  {gap.text}
-                </li>
-              ))}
-            </ul>
+            <p className="text-[10px] tracking-[0.1em] text-white/50">В год · с проживанием</p>
+            <p className="mt-1 text-[22px] font-medium leading-none tracking-[-0.04em] text-white sm:text-[25px]">{price}</p>
           </div>
-        ) : (
-          <div className="flex items-start gap-2 rounded-xl border border-teal-400/20 bg-teal-400/[0.06] px-3.5 py-3 text-[12.5px] text-teal-200/90">
-            <IconCircleCheck className="mt-0.5 h-4 w-4 shrink-0 text-teal-400" />
-            Явных разрывов нет — программа подходит по всем ключевым критериям.
+          <div className="hidden sm:block">
+            <p className="text-[10px] tracking-[0.1em] text-white/50">Дедлайн</p>
+            <p className="mt-1 text-[12px] text-white/85">{deadline ? formatDateRu(deadline.date) : "Уточняется"}</p>
           </div>
-        )}
+        </div>
+        <button
+          type="button"
+          onClick={() => onSetTarget(program.id)}
+          className="border-b border-white/70 pb-1 text-[12px] font-medium text-white transition-[border-color,transform] hover:translate-x-1 hover:border-white"
+        >
+          Выбрать направление ↗
+        </button>
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-line-soft pt-4">
+      <div className="relative z-10 mt-5 flex items-center gap-4 text-[11px] text-white/50">
         <button
           type="button"
           onClick={() => onToggleCompare(program.id)}
           aria-pressed={inCompare}
           disabled={!inCompare && compareDisabled}
-          className={cn(
-            "inline-flex h-9 items-center gap-2 rounded-lg border px-3.5 text-[12.5px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-45",
-            inCompare
-              ? "border-violet-500/50 bg-violet-500/20 text-violet-200"
-              : "border-line bg-white/[0.04] text-mist-300 hover:bg-white/[0.08] hover:text-mist-100",
-          )}
+          className="transition-colors hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
         >
-          <IconArrowRight className="h-3.5 w-3.5" />
-          {inCompare ? "В сравнении" : compareDisabled ? `Сравнение: ${compareSelectionCount}/3` : "Добавить в сравнение"}
+          {inCompare ? "В сравнении ✓" : compareDisabled ? `Сравнение ${compareSelectionCount}/3` : "+ Сравнить"}
         </button>
-        <button
-          type="button"
-          onClick={() => onToggleFavorite(program.id)}
-          aria-pressed={favorite}
-          className={cn(
-            "inline-flex h-9 items-center gap-2 rounded-lg border px-3.5 text-[12.5px] font-medium transition-colors",
-            favorite
-              ? "border-amber-400/40 bg-amber-400/15 text-amber-300"
-              : "border-line bg-white/[0.04] text-mist-300 hover:bg-white/[0.08] hover:text-mist-100",
-          )}
-        >
-          <IconStar className="h-3.5 w-3.5" filled={favorite} />
-          {favorite ? "В избранном" : "В избранное"}
-        </button>
-        <button
-          type="button"
-          onClick={() => onSetTarget(program.id)}
-          className="inline-flex h-9 items-center gap-2 rounded-lg px-3.5 text-[12.5px] font-medium text-mist-400 transition-colors hover:bg-white/[0.06] hover:text-mist-100"
-        >
-          Сделать целью маршрута
-        </button>
+        {program.sources[0] ? (
+          <a href={program.sources[0].url} target="_blank" rel="noreferrer" aria-label={`Источник: ${program.sources[0].label}`} className="transition-colors hover:text-white">
+            <IconExternal className="h-3.5 w-3.5" />
+          </a>
+        ) : null}
       </div>
-    </Card>
+    </article>
   );
 }

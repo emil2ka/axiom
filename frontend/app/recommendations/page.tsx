@@ -7,8 +7,6 @@ import { StepGuard } from "@/components/shell/step-guard";
 import { NextStepBar } from "@/components/shell/next-step-bar";
 import { ProgramCard } from "@/components/flow/program-card";
 import { SectionHeading } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { InfoNote } from "@/components/ui/note";
 import { buttonStyles } from "@/components/ui/button";
 import { IconX } from "@/components/icons";
 import { PROGRAMS, recommend } from "@/lib/shared/engine";
@@ -44,56 +42,58 @@ export default function RecommendationsPage() {
 
   const filterChip = (active: boolean) =>
     cn(
-      "rounded-full border px-3 py-1.5 text-[12.5px] transition-colors",
+      "shrink-0 whitespace-nowrap border-b px-1 py-2 text-[12.5px] transition-colors",
       active
-        ? "border-violet-500/50 bg-violet-500/20 text-violet-200"
-        : "border-line bg-white/[0.03] text-mist-400 hover:bg-white/[0.07] hover:text-mist-200",
+        ? "border-white text-white"
+        : "border-transparent text-mist-500 hover:text-mist-200",
     );
 
   return (
     <StepGuard>
       <SectionHeading
         eyebrow="Шаг 3 из 6"
-        title="Персональные рекомендации"
-        description="Каждая программа объясняется через твою память: бюджет, интересы, IELTS и приоритет. Меняй факты — список перестроится."
+        title="Твои университеты"
+        description="Университеты, которые подходят твоему профилю. Начни с первого варианта."
         right={
-          <Badge tone="amber" dot>
-            Демо-данные · {PROGRAMS.length} программ в базе
-          </Badge>
+          <span className="text-[11px] text-mist-600">Демо · {PROGRAMS.length} программ</span>
         }
         className="mb-6"
       />
 
-      <div className="mb-5 flex flex-wrap items-center gap-2">
-        <button type="button" onClick={() => setCountryFilter(null)} className={filterChip(countryFilter === null)}>
-          Все страны
-        </button>
-        {countries.map((country) => (
-          <button
-            key={country}
-            type="button"
-            onClick={() => setCountryFilter(country === countryFilter ? null : country)}
-            className={filterChip(countryFilter === country)}
-          >
-            {country}
+      <div className="mb-6 flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-5">
+        <div className="no-scrollbar flex min-w-0 items-center gap-4 overflow-x-auto" aria-label="Фильтр по стране">
+          <button type="button" aria-pressed={countryFilter === null} onClick={() => setCountryFilter(null)} className={filterChip(countryFilter === null)}>
+            Все страны
           </button>
-        ))}
-        <span className="mx-1 hidden h-5 w-px bg-line sm:block" />
-        <button type="button" onClick={() => setScholarshipOnly((value) => !value)} className={filterChip(scholarshipOnly)}>
-          Со стипендией
-        </button>
-        <button type="button" onClick={() => setBudgetOnly((value) => !value)} className={filterChip(budgetOnly)}>
-          В моём бюджете
-        </button>
+          {countries.map((country) => (
+            <button
+              key={country}
+              type="button"
+              aria-pressed={countryFilter === country}
+              onClick={() => setCountryFilter(country === countryFilter ? null : country)}
+              className={filterChip(countryFilter === country)}
+            >
+              {country}
+            </button>
+          ))}
+        </div>
+        <div className="flex shrink-0 items-center gap-4 sm:border-l sm:border-white/10 sm:pl-5">
+          <button type="button" aria-pressed={scholarshipOnly} onClick={() => setScholarshipOnly((value) => !value)} className={filterChip(scholarshipOnly)}>
+            Со стипендией
+          </button>
+          <button type="button" aria-pressed={budgetOnly} onClick={() => setBudgetOnly((value) => !value)} className={filterChip(budgetOnly)}>
+            В моём бюджете
+          </button>
+        </div>
       </div>
 
-      <div className="space-y-4">
-        {filtered.map((item) => (
+      <div className="space-y-6">
+        {filtered[0] ? (
           <ProgramCard
-            key={item.program.id}
-            item={item}
-            favorite={favorites.includes(item.program.id)}
-            inCompare={compareIds.includes(item.program.id)}
+            item={filtered[0]}
+            featured
+            favorite={favorites.includes(filtered[0].program.id)}
+            inCompare={compareIds.includes(filtered[0].program.id)}
             compareDisabled={compareIds.length >= 3}
             compareSelectionCount={compareIds.length}
             onToggleFavorite={toggleFavorite}
@@ -103,7 +103,28 @@ export default function RecommendationsPage() {
               router.push("/roadmap");
             }}
           />
-        ))}
+        ) : null}
+
+        {filtered.length > 1 ? (
+          <div className="grid gap-5 lg:grid-cols-2">
+            {filtered.slice(1).map((item) => (
+              <ProgramCard
+                key={item.program.id}
+                item={item}
+                favorite={favorites.includes(item.program.id)}
+                inCompare={compareIds.includes(item.program.id)}
+                compareDisabled={compareIds.length >= 3}
+                compareSelectionCount={compareIds.length}
+                onToggleFavorite={toggleFavorite}
+                onToggleCompare={toggleCompare}
+                onSetTarget={(programId) => {
+                  setTargetProgram(programId);
+                  router.push("/roadmap");
+                }}
+              />
+            ))}
+          </div>
+        ) : null}
       </div>
 
       {filtered.length === 0 ? (
@@ -111,11 +132,6 @@ export default function RecommendationsPage() {
           Под выбранные фильтры ничего не попало — попробуй снять часть условий.
         </div>
       ) : null}
-
-      <InfoNote tone="info" className="mt-6">
-        Оценка соответствия рассчитывается детерминированным правилами движком по твоим фактам. «Почему подходит» и
-        «чего не хватает» ссылаются на память — ничего не выдаётся без причины.
-      </InfoNote>
 
       {compareIds.length > 0 ? (
         <div className="sticky bottom-4 z-30 mt-6">

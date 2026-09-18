@@ -243,7 +243,9 @@ console.log("\n[11] Обещания интерфейса подкреплены
 const landing = readFileSync(new URL("../../frontend/app/page.tsx", import.meta.url), "utf8");
 
 // «Сказал "хочу Европу и бюджет до $15k" — увидишь, как слова превращаются в факты»
-const landingExample = /Сказал «([^»]+)»/.exec(landing)?.[1] ?? "";
+const hero = readFileSync(new URL("../../frontend/components/landing/hero-memory.tsx", import.meta.url), "utf8");
+const landingExample = /const PHRASE = "([^"]+)"/.exec(hero)?.[1] ?? "";
+check("лендинг подключает демонстрацию памяти", /<HeroMemory/.test(landing));
 check("лендинг приводит конкретный пример реплики", landingExample.length > 10, landingExample);
 const exampleFacts = extractFacts(landingExample, {});
 check(`пример «${landingExample}» действительно даёт факты`, exampleFacts.length >= 2, exampleFacts.map((item) => item.field).join(", "));

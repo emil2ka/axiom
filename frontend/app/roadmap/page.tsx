@@ -2,7 +2,6 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { StepGuard } from "@/components/shell/step-guard";
 import { NextStepBar } from "@/components/shell/next-step-bar";
 import { Card, SectionHeading } from "@/components/ui/card";
@@ -72,7 +71,9 @@ function StepRow({
         </div>
         <p className="mt-1 text-[12.5px] leading-relaxed text-mist-400">{step.description}</p>
         <p className="mt-1.5 text-[11.5px] leading-relaxed text-mist-500">Почему: {step.why}</p>
-        <p className="mt-0.5 text-[11px] text-mist-600">{step.sourceNote}</p>
+        <p className="mt-0.5 text-[11px] text-mist-600">
+          {step.sourceNote.replace(/^Демо-данные\s·\s/, "")}
+        </p>
       </div>
     </li>
   );
@@ -85,8 +86,6 @@ export default function RoadmapPage() {
   const roadmapDone = useAxiomStore((state) => state.roadmapDone);
   const toggleRoadmapStep = useAxiomStore((state) => state.toggleRoadmapStep);
   const clearRoadmapProgress = useAxiomStore((state) => state.clearRoadmapProgress);
-  const resetAll = useAxiomStore((state) => state.resetAll);
-  const router = useRouter();
 
   const target = useMemo(() => {
     if (targetProgramId) return PROGRAMS.find((item) => item.id === targetProgramId) ?? null;
@@ -131,7 +130,7 @@ export default function RoadmapPage() {
       />
 
       {target ? (
-        <Card className="mb-6 border-violet-500/25 bg-gradient-to-r from-violet-500/[0.09] via-transparent to-teal-400/[0.06]">
+        <Card className="mb-6 border-violet-500/25 bg-violet-500/[0.05]">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-start gap-4">
               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/20 text-violet-300">
@@ -158,8 +157,8 @@ export default function RoadmapPage() {
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-5">
           {nextStep ? (
-            <Card className="border-teal-400/30 bg-gradient-to-r from-teal-400/[0.08] via-transparent to-violet-500/[0.07]">
-              <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-teal-300">
+            <Card className="border-violet-500/30 bg-violet-500/[0.05]">
+              <p className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.16em] text-violet-300">
                 <IconArrowRight className="h-3.5 w-3.5" />
                 Твой следующий шаг
               </p>
@@ -260,17 +259,6 @@ export default function RoadmapPage() {
             Шаги и дедлайны построены на демо-данных программы «{target?.university ?? "—"}» и общих требованиях
             европейских вузов. Перед подачей сверься с официальным сайтом.
           </InfoNote>
-
-          <Button
-            variant="danger"
-            className="w-full"
-            onClick={() => {
-              resetAll();
-              router.push("/");
-            }}
-          >
-            Начать заново с чистого профиля
-          </Button>
         </div>
       </div>
 

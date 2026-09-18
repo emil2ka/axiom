@@ -5,8 +5,6 @@ import { motion } from "framer-motion";
 import { StepGuard } from "@/components/shell/step-guard";
 import { NextStepBar } from "@/components/shell/next-step-bar";
 import { Card, SectionHeading } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ScoreRing } from "@/components/ui/progress";
 import { RangeSlider } from "@/components/ui/slider";
 import { InfoNote } from "@/components/ui/note";
 import { Button } from "@/components/ui/button";
@@ -30,9 +28,9 @@ function weightLabel(value: number): string {
 }
 
 function deltaBadge(diff: RankDiff) {
-  if (diff.delta > 0) return <Badge tone="teal">▲ +{diff.delta} в топе</Badge>;
-  if (diff.delta < 0) return <Badge tone="rose">▼ {diff.delta} в топе</Badge>;
-  return <Badge tone="violet">вошёл в топ-5</Badge>;
+  if (diff.delta > 0) return <span className="text-[11.5px] tabular-nums text-teal-300">▲ +{diff.delta}</span>;
+  if (diff.delta < 0) return <span className="text-[11.5px] tabular-nums text-rose-300">▼ {diff.delta}</span>;
+  return <span className="text-[11.5px] text-violet-300">+ в топ-5</span>;
 }
 
 export default function WhatIfPage() {
@@ -171,23 +169,20 @@ export default function WhatIfPage() {
               <IconSparkles className="h-4 w-4" />
               {result.summary}
             </p>
-            {result.diff.moved.length || result.diff.entered.length || result.diff.dropped.length ? (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {result.diff.moved.map((diff) => (
-                  <span key={diff.programId} title={diff.name}>
-                    {deltaBadge(diff)}
-                  </span>
-                ))}
-                {result.diff.entered.map((diff) => (
-                  <span key={diff.programId} title={diff.name}>
-                    <Badge tone="violet">+ {diff.name}</Badge>
-                  </span>
-                ))}
-                {result.diff.dropped.map((diff) => (
-                  <span key={diff.programId} title={diff.name}>
-                    <Badge tone="neutral">выпал: {diff.name}</Badge>
-                  </span>
-                ))}
+            {result.diff.entered.length || result.diff.dropped.length ? (
+              <div className="mt-3 space-y-1 border-t border-line-soft pt-3 text-[12.5px] leading-relaxed">
+                {result.diff.entered.length ? (
+                  <p className="text-mist-400">
+                    <span className="text-teal-300">вошли: </span>
+                    {result.diff.entered.map((diff) => diff.name).join(", ")}
+                  </p>
+                ) : null}
+                {result.diff.dropped.length ? (
+                  <p className="text-mist-400">
+                    <span className="text-rose-300">выпали: </span>
+                    {result.diff.dropped.map((diff) => diff.name).join(", ")}
+                  </p>
+                ) : null}
               </div>
             ) : null}
           </Card>
@@ -203,21 +198,21 @@ export default function WhatIfPage() {
                   className="card flex flex-wrap items-center justify-between gap-4 p-4 sm:px-5"
                 >
                   <div className="flex min-w-0 items-center gap-4">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-line bg-white/[0.04] font-display text-[12.5px] font-semibold tabular-nums text-mist-300">
-                      {item.rank}
+                    <span className="shrink-0 font-display text-[13px] tabular-nums text-mist-600">
+                      {String(item.rank).padStart(2, "0")}
                     </span>
                     <div className="min-w-0">
-                      <p className="truncate font-display text-[13.5px] font-semibold text-mist-50">
-                        {item.program.university}
-                      </p>
+                      <p className="truncate font-display text-[13.5px] text-mist-50">{item.program.university}</p>
                       <p className="mt-0.5 text-[11.5px] text-mist-500">
                         {item.program.country}, {item.program.city} · {formatUsd(item.totalPerYearUsd)}/год
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-4">
                     {diff ? deltaBadge(diff) : null}
-                    <ScoreRing value={item.score} size={46} stroke={4} />
+                    <span className="w-7 text-right font-display text-[15px] tabular-nums text-violet-400">
+                      {item.score}
+                    </span>
                   </div>
                 </motion.li>
               );

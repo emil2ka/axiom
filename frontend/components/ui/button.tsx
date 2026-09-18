@@ -5,22 +5,21 @@ type Variant = "primary" | "secondary" | "ghost" | "danger";
 type Size = "sm" | "md" | "lg";
 
 const VARIANTS: Record<Variant, string> = {
-  primary:
-    "bg-gradient-to-r from-violet-500 to-violet-600 text-white shadow-[var(--shadow-glow)] hover:brightness-110 active:brightness-95",
-  secondary: "border border-line bg-white/[0.05] text-mist-100 hover:bg-white/[0.09]",
-  ghost: "text-mist-300 hover:bg-white/[0.06] hover:text-mist-100",
-  danger: "border border-rose-400/25 bg-rose-400/10 text-rose-300 hover:bg-rose-400/20",
+  primary: "bg-mist-50 text-ink-950 hover:bg-white active:bg-mist-100",
+  secondary: "border border-line bg-white/[0.04] text-mist-100 hover:bg-white/[0.08] hover:border-mist-500/50",
+  ghost: "text-mist-300 hover:bg-white/[0.05] hover:text-mist-50",
+  danger: "border border-rose-400/30 bg-transparent text-rose-300 hover:bg-rose-400/10",
 };
 
 const SIZES: Record<Size, string> = {
-  sm: "h-9 gap-1.5 rounded-lg px-3.5 text-[13px]",
-  md: "h-10 gap-2 rounded-xl px-4.5 text-sm",
-  lg: "h-12 gap-2 rounded-xl px-6 text-[15px]",
+  sm: "h-9 gap-1.5 rounded-full px-4 text-[13px]",
+  md: "h-10 gap-2 rounded-full px-4.5 text-sm",
+  lg: "h-12 gap-2 rounded-full px-6 text-[15px]",
 };
 
 export function buttonStyles(variant: Variant = "primary", size: Size = "md", className?: string): string {
   return cn(
-    "inline-flex select-none items-center justify-center whitespace-nowrap font-medium transition-all duration-200 disabled:pointer-events-none disabled:opacity-45",
+    "inline-flex select-none items-center justify-center whitespace-nowrap font-medium transition-colors duration-200 disabled:pointer-events-none disabled:opacity-45",
     VARIANTS[variant],
     SIZES[size],
     className,

@@ -33,10 +33,10 @@ function MemoryChip({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ type: "spring", stiffness: 380, damping: 30 }}
-      className="group rounded-xl border border-line-soft bg-white/[0.035] px-3 py-2.5"
+      className="group rounded-xl bg-white/[0.03] px-3.5 py-3 transition-colors hover:bg-white/[0.055]"
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-mist-500">{fact.label}</span>
+        <span className="text-[10px] uppercase tracking-[0.18em] text-mist-500">{fact.label}</span>
         {editable ? (
           <span className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
             <button
@@ -87,12 +87,12 @@ function MemoryChip({
           </button>
         </div>
       ) : (
-        <p className="mt-1 text-[13.5px] font-medium leading-snug text-mist-100">{fact.display}</p>
+        <p className="mt-1 text-[13.5px] leading-snug text-mist-100">{fact.display}</p>
       )}
 
       {fact.quote && !editing ? (
-        <p className="mt-1 line-clamp-2 text-[11px] italic leading-snug text-mist-500" title={fact.quote}>
-          «{fact.quote.replace(/^…+/, "").replace(/…+$/, "")}»
+        <p className="mt-1 line-clamp-2 text-[11px] italic leading-snug text-mist-600" title={fact.quote}>
+          «{fact.quote.replace(/^…+|«|»/g, "").replace(/^[\s,.;:-]+/, "").replace(/…+$/, "").trim()}»
         </p>
       ) : null}
     </motion.li>
@@ -117,12 +117,10 @@ export function MemoryPanel({
   emptyHint?: string;
 }) {
   return (
-    <section className={cn("card p-4 sm:p-5", className)} aria-label={title}>
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="font-display text-sm font-semibold tracking-tight text-mist-50">{title}</h2>
-        <span className="rounded-full border border-line bg-white/[0.04] px-2 py-0.5 text-[11px] tabular-nums text-mist-400">
-          {facts.length}
-        </span>
+    <section className={cn("", className)} aria-label={title}>
+      <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-3.5">
+        <h2 className="text-[11px] uppercase tracking-[0.18em] text-mist-400">{title}</h2>
+        <span className="text-[11px] tabular-nums text-mist-600">{facts.length}</span>
       </div>
       {facts.length === 0 ? (
         <p className="mt-3 text-[12.5px] leading-relaxed text-mist-500">{emptyHint}</p>
