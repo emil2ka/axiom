@@ -1,0 +1,54 @@
+# Render Blueprint: фронтенд и API одним нажатием.
+# Dashboard → New + → Blueprint → выбрать репозиторий emil2ka/axiom.
+# Значения с sync:false Render спросит при создании.
+
+services:
+  - type: web
+    name: axiom-frontend
+    runtime: node
+    plan: free
+    region: frankfurt
+    rootDir: frontend
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: NEXT_PUBLIC_VOICE_ENABLED
+        value: "1"
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTER_MODEL
+        value: z-ai/glm-5.3-flash
+      - key: XAI_API_KEY
+        sync: false
+      - key: XAI_TTS_VOICE
+        value: orion
+
+  - type: web
+    name: axiom-backend
+    runtime: node
+    plan: free
+    region: frankfurt
+    rootDir: backend
+    buildCommand: npm ci --include=dev
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTER_MODEL
+        value: z-ai/glm-5.3-flash
+      - key: ALLOWED_ORIGIN
+        sync: false
+      - key: RATE_LIMIT_PER_MIN
+        value: "120"
