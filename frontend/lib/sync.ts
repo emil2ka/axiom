@@ -96,9 +96,9 @@ export async function attachAccount(
   try {
     const row = await fetchJourney(supabase, userId);
     if (!row) {
-      // Первый вход: забираем локальный профиль, включая демо-профиль с лендинга, —
-      // иначе сценарий «посмотреть демо → зарегистрироваться» оставлял бы пустой аккаунт.
-      const claim = localOwner === null && !isEmptyJourney(local) ? local : emptyJourney();
+      // Новый аккаунт начинается с чистого листа: демо и гостевые данные
+      // в него не переезжают, человек проходит путь сам, по этапам.
+      const claim = localOwner === null && !isDemo && !isEmptyJourney(local) ? local : emptyJourney();
       const inserted = await insertJourney(supabase, userId, claim);
       attached = { userId, id: inserted.id, revision: inserted.revision };
       setStatus("saved");

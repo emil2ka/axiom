@@ -160,6 +160,12 @@ export default function OnboardingPage() {
     setDone(true);
   };
 
+  useEffect(() => {
+    if (!done) return;
+    const timer = window.setTimeout(() => router.push("/interview"), 1800);
+    return () => window.clearTimeout(timer);
+  }, [done, router]);
+
   if (!configured) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-ink-950 px-4">
@@ -219,8 +225,12 @@ export default function OnboardingPage() {
               Профиль создан
             </h1>
             <p className="mx-auto mt-3 max-w-md text-[13.5px] leading-relaxed text-mist-400">
-              AXIOM уже знает о тебе главное. Осталось пройти короткое интервью — оно уточнит детали и соберёт
+              AXIOM уже знает о тебе главное. Через мгновение откроется интервью — оно уточнит детали и соберёт
               персональный маршрут.
+            </p>
+            <p className="mx-auto mt-4 flex items-center justify-center gap-2 text-[12px] text-violet-300">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-violet-300" />
+              Открываю интервью…
             </p>
 
             {summary.length ? (

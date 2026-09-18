@@ -6,7 +6,7 @@ import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card, SectionHeading } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { IconDownload, IconShield, IconTrash, IconUsers } from "@/components/icons";
+import { IconDownload, IconRefresh, IconShield, IconTrash, IconUsers } from "@/components/icons";
 import { useAuthUi } from "@/lib/auth-ui";
 import { formatMoment } from "@/lib/labels";
 import { pickJourney, useAxiomStore } from "@/lib/store";
@@ -89,6 +89,14 @@ export default function ProfilePage() {
     await supabase?.auth.signOut();
     useAxiomStore.getState().clearAccount();
     router.push("/");
+  };
+
+  const resetProgress = () => {
+    if (!window.confirm("Начать заново? Профиль, память и прогресс очистятся в аккаунте и на этом устройстве.")) {
+      return;
+    }
+    useAxiomStore.getState().resetAll();
+    router.push("/onboarding");
   };
 
   return (
@@ -230,7 +238,11 @@ export default function ProfilePage() {
                 {error}
               </p>
             ) : null}
-            <div className="mt-6">
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button variant="secondary" onClick={resetProgress}>
+                <IconRefresh className="h-4 w-4" />
+                Начать заново
+              </Button>
               <Button variant="danger" onClick={() => void removeAccount()} loading={busy}>
                 <IconTrash className="h-4 w-4" />
                 Удалить аккаунт и все данные
