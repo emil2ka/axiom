@@ -30,14 +30,16 @@ const llmFactSchema = z.object({
 const llmFactsSchema = z.object({ facts: z.array(llmFactSchema).max(12) });
 const llmSummarySchema = z.object({ summary: z.string().min(20).max(900) });
 
-type Provider = "gemini" | "openai" | "none";
+type Provider = "gemini" | "openai" | "openrouter" | "none";
 
 function provider(): Provider {
   const explicit = process.env.LLM_PROVIDER?.toLowerCase();
   if (explicit === "gemini" && process.env.GEMINI_API_KEY) return "gemini";
   if (explicit === "openai" && process.env.OPENAI_API_KEY) return "openai";
+  if (explicit === "openrouter" && process.env.OPENROUTER_API_KEY) return "openrouter";
   if (process.env.GEMINI_API_KEY) return "gemini";
   if (process.env.OPENAI_API_KEY) return "openai";
+  if (process.env.OPENROUTER_API_KEY) return "openrouter";
   return "none";
 }
 
@@ -91,6 +93,37 @@ async function callOpenAi(prompt: string): Promise<string | null> {
         temperature: 0.2,
       }),
       signal: AbortSignal.timeout(12000),
+    });
+    if (!response.ok) return null;
+    const data = (await response.json()) as { choices?: { message?: { content?: string } }[] };
+    return data.choices?.[0]?.message?.content ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function callOpenRouter(prompt: string): Promise<string | null> {
+  const key = process.env.OPENROUTER_API_KEY;
+  if (!key) return null;
+  const model = process.env.OPENROUTER_MODEL ?? "z-ai/glm-5.3-flash";
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${key}`,
+        "HTTP-Referer": "https://axiom.local",
+        "X-Title": "AXIOM",
+      },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.2,
+        max_tokens: 1600,
+        reasoning: { effort: "low" },
+        provider: { allow_fallbacks: true },
+      }),
+      signal: AbortSignal.timeout(15000),
     });
     if (!response.ok) return null;
     const data = (await response.json()) as { choices?: { message?: { content?: string } }[] };
@@ -159,7 +192,12 @@ async function callLlm(prompt: string): Promise<string | null> {
 
   for (let attempt = 0; attempt <= RETRIES; attempt += 1) {
     llmStats.calls += 1;
-    const raw = current === "gemini" ? await callGemini(prompt) : await callOpenAi(prompt);
+    const raw =
+      current === "gemini"
+        ? await callGemini(prompt)
+        : current === "openai"
+          ? await callOpenAi(prompt)
+          : await callOpenRouter(prompt);
     if (raw !== null) {
       cacheSet(prompt, raw);
       return raw;
