@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { consumeQuota, quotaResponse } from "@/lib/server/quota";
 
 export const runtime = "nodejs";
 
@@ -26,6 +27,9 @@ export async function GET(request: NextRequest) {
 
   const text = (request.nextUrl.searchParams.get("text") ?? "").trim();
   if (!text) return new Response("text is required", { status: 400 });
+
+  const quota = await consumeQuota("tts");
+  if (!quota.allowed) return quotaResponse(quota, "tts");
 
   try {
     const response = await synth(apiKey, text);
@@ -55,6 +59,9 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "invalid json" }, { status: 400 });
   }
   if (!text) return Response.json({ error: "text is required" }, { status: 400 });
+
+  const quota = await consumeQuota("tts");
+  if (!quota.allowed) return quotaResponse(quota, "tts");
 
   try {
     const response = await fetch("https://api.x.ai/v1/tts", {

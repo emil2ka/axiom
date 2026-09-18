@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Logo } from "@/components/logo";
 import { DemoButton } from "@/components/shell/demo-button";
+import { UserMenu } from "@/components/shell/user-menu";
 import { buttonStyles } from "@/components/ui/button";
 import { CampusField } from "@/components/landing/campus-field";
 import { FeatureShowcase } from "@/components/landing/feature-showcase";
@@ -9,6 +10,14 @@ import { HeroMemory } from "@/components/landing/hero-memory";
 import { UniversityCard } from "@/components/universities/university-card";
 import { IconArrowRight } from "@/components/icons";
 import { groupUniversities } from "@/lib/university";
+import type { UniversityGroup } from "@/lib/university";
+
+const FEATURED_SLUGS = [
+  "university-of-cambridge",
+  "university-of-oxford",
+  "massachusetts-institute-of-technology",
+  "stanford-university",
+];
 
 export const metadata: Metadata = {
   title: "AXIOM — AI, который узнаёт тебя и строит поступление вокруг тебя",
@@ -22,6 +31,10 @@ export default async function LandingPage({
   const params = await searchParams;
   const instant = "instant" in params;
   const universities = groupUniversities();
+  const featured = FEATURED_SLUGS.map((slug) => universities.find((group) => group.slug === slug)).filter(
+    (group): group is UniversityGroup => Boolean(group),
+  );
+  const showcase = [...featured, ...universities.filter((group) => !featured.includes(group))].slice(0, 4);
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -48,9 +61,12 @@ export default async function LandingPage({
               Вузы
             </Link>
           </nav>
-          <Link href="/interview" className={buttonStyles("primary", "sm")}>
-            Начать
-          </Link>
+          <div className="flex items-center gap-5">
+            <UserMenu />
+            <Link href="/interview" className={buttonStyles("primary", "sm")}>
+              Начать
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -136,7 +152,7 @@ export default async function LandingPage({
             </div>
 
             <div className="mt-8 grid gap-5 sm:grid-cols-2">
-              {universities.slice(0, 4).map((group, index) => (
+              {showcase.map((group, index) => (
                 <UniversityCard key={group.slug} group={group} priority={index < 2} />
               ))}
               <Link

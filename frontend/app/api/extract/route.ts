@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { consumeQuota, quotaResponse } from "@/lib/server/quota";
 
 export const runtime = "nodejs";
 
@@ -59,6 +60,9 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "invalid json" }, { status: 400 });
   }
   if (!text) return Response.json({ facts: [] });
+
+  const quota = await consumeQuota("llm");
+  if (!quota.allowed) return quotaResponse(quota, "llm");
 
   const knownLine = known.length ? known.map((item) => `${item.label}: ${item.value}`).join("; ") : "пусто";
 

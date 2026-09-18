@@ -27,3 +27,6 @@ npm-debug.log*
 # Артефакт сборки serverless-функции (генерируется npm run build:api)
 backend/api/index.js
 .gstack/
+
+# Supabase CLI
+supabase/.temp/

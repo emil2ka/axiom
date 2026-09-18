@@ -10,3 +10,4 @@ export * from "./whatif";
 export * from "./roadmap";
 export * from "./diagnosis";
 export * from "./interview";
+export * from "./journey";

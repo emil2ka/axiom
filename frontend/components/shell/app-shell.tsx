@@ -7,6 +7,7 @@ import { Logo } from "@/components/logo";
 import { IconRefresh } from "@/components/icons";
 import { FLOW_STEPS, findStepIndex } from "@/lib/flow";
 import { DemoSeed } from "@/components/shell/demo-seed";
+import { UserMenu } from "@/components/shell/user-menu";
 import { useHydrated } from "@/lib/hooks";
 import { useAxiomStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -15,16 +16,14 @@ const BALL = "radial-gradient(120% 120% at 32% 26%, #d7ebff 0%, #7cb6f2 45%, #3a
 
 /** Шаги — полосой во всю ширину сайта, всегда на виду: шарик на текущем. */
 function StepNav({ currentIndex }: { currentIndex: number }) {
-  const safeIndex = currentIndex === -1 ? 0 : currentIndex;
-
   return (
     <nav
       aria-label="Этапы маршрута"
       className="no-scrollbar flex w-full items-center overflow-x-auto border-t border-line-soft/70 px-4 py-3 sm:overflow-visible sm:px-6"
     >
       {FLOW_STEPS.map((step, index) => {
-        const done = index < safeIndex;
-        const current = index === safeIndex;
+        const done = currentIndex >= 0 && index < currentIndex;
+        const current = index === currentIndex;
         return (
           <Fragment key={step.id}>
             {index > 0 ? <span aria-hidden="true" className="mx-2 h-px w-4 shrink-0 bg-white/[0.08] sm:mx-4 sm:w-auto sm:flex-1" /> : null}
@@ -83,6 +82,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <IconRefresh className="h-4 w-4" />
               </button>
             ) : null}
+            <UserMenu />
           </div>
         </div>
         <StepNav currentIndex={currentIndex} />

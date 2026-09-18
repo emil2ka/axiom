@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { AuthDialog } from "@/components/auth/auth-dialog";
+import { SyncProvider } from "@/components/shell/sync-provider";
 import "./globals.css";
 
 const inter = Inter({
@@ -26,7 +28,12 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru" className={inter.variable}>
-      <body>{children}</body>
+      <body>
+        <SyncProvider>
+          {children}
+          <AuthDialog />
+        </SyncProvider>
+      </body>
     </html>
   );
 }

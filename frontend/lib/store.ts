@@ -2,26 +2,18 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { mergeFacts, normalizeStoredMemories, reparseFactValue } from "@/lib/shared/engine";
-import type { ChatMessage, MemoryField, MemoryFact } from "@/lib/shared/engine";
+import { DEFAULT_JOURNEY_WHATIF, mergeFacts, normalizeStoredMemories, reparseFactValue } from "@/lib/shared/engine";
+import type {
+  ChatMessage,
+  JourneySnapshot,
+  JourneyWhatIf,
+  MemoryField,
+  MemoryFact,
+} from "@/lib/shared/engine";
 
-export interface WhatIfState {
-  presetId: string;
-  budget: number | null;
-  ielts: number | null;
-  countryWeight: number;
-  budgetWeight: number;
-  scholarshipWeight: number;
-}
+export type WhatIfState = JourneyWhatIf;
 
-export const DEFAULT_WHATIF: WhatIfState = {
-  presetId: "balanced",
-  budget: null,
-  ielts: null,
-  countryWeight: 1,
-  budgetWeight: 1,
-  scholarshipWeight: 1,
-};
+export const DEFAULT_WHATIF: WhatIfState = DEFAULT_JOURNEY_WHATIF;
 
 interface SeedPayload {
   memories: MemoryFact[];
@@ -30,7 +22,7 @@ interface SeedPayload {
   demoMode: boolean;
 }
 
-interface AxiomState {
+export interface AxiomState {
   memories: MemoryFact[];
   messages: ChatMessage[];
   answeredQuestionIds: string[];
@@ -40,6 +32,10 @@ interface AxiomState {
   roadmapDone: Record<string, boolean>;
   whatIf: WhatIfState;
   demoMode: boolean;
+  /** Чей профиль лежит в браузере: id аккаунта или null у гостя. */
+  syncOwner: string | null;
+  /** Версия строки в облаке, с которой синхронизирован этот браузер. */
+  syncRevision: number;
 
   addFacts: (facts: MemoryFact[]) => void;
   overrideMemory: (id: string, rawValue: string) => void;
@@ -55,6 +51,27 @@ interface AxiomState {
   setWhatIf: (patch: Partial<WhatIfState>) => void;
   seed: (payload: SeedPayload) => void;
   resetAll: () => void;
+  applyJourney: (snapshot: JourneySnapshot, owner: string, revision: number) => void;
+  setSyncMeta: (owner: string | null, revision: number) => void;
+  clearAccount: () => void;
+}
+
+/** Снимок для облака: ровно те поля, которые лежат в journeys.state и journeys.progress. */
+export function pickJourney(state: AxiomState): JourneySnapshot {
+  return {
+    state: {
+      memories: state.memories,
+      messages: state.messages,
+      answeredQuestionIds: state.answeredQuestionIds,
+      whatIf: state.whatIf,
+    },
+    progress: {
+      compareIds: state.compareIds,
+      favorites: state.favorites,
+      targetProgramId: state.targetProgramId,
+      roadmapDone: state.roadmapDone,
+    },
+  };
 }
 
 
@@ -72,6 +89,8 @@ export const useAxiomStore = create<AxiomState>()(
       roadmapDone: {},
       whatIf: DEFAULT_WHATIF,
       demoMode: false,
+      syncOwner: null,
+      syncRevision: 0,
 
       addFacts: (facts) =>
         set((state) => ({ memories: mergeFacts(state.memories, facts) })),
@@ -169,6 +188,38 @@ export const useAxiomStore = create<AxiomState>()(
           roadmapDone: {},
           whatIf: DEFAULT_WHATIF,
           demoMode: false,
+        }),
+
+      applyJourney: (snapshot, owner, revision) =>
+        set({
+          memories: normalizeStoredMemories(snapshot.state.memories),
+          messages: snapshot.state.messages,
+          answeredQuestionIds: snapshot.state.answeredQuestionIds,
+          whatIf: snapshot.state.whatIf,
+          compareIds: snapshot.progress.compareIds,
+          favorites: snapshot.progress.favorites,
+          targetProgramId: snapshot.progress.targetProgramId,
+          roadmapDone: snapshot.progress.roadmapDone,
+          demoMode: false,
+          syncOwner: owner,
+          syncRevision: revision,
+        }),
+
+      setSyncMeta: (owner, revision) => set({ syncOwner: owner, syncRevision: revision }),
+
+      clearAccount: () =>
+        set({
+          memories: [],
+          messages: [],
+          answeredQuestionIds: [],
+          compareIds: [],
+          favorites: [],
+          targetProgramId: null,
+          roadmapDone: {},
+          whatIf: DEFAULT_WHATIF,
+          demoMode: false,
+          syncOwner: null,
+          syncRevision: 0,
         }),
     }),
     {
