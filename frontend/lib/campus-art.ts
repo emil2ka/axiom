@@ -1,3 +1,6 @@
+/** One art-directed campus cut-out per program. Adding a program without a
+ * cut-out is not allowed: the catalog shows only universities with a real
+ * campus visual, so every card renders the same way. */
 export const BUILDINGS: Record<string, string> = {
   "pw-cs": "warsaw-tech-full",
   "uw-cs": "warsaw-uni",
@@ -15,6 +18,7 @@ export const BUILDINGS: Record<string, string> = {
   "rug-psych": "groningen-campus",
 };
 
+/** Мягкий цветовой фон под каждым кампусом — чтобы карточки не читались как одна обоина. */
 export const TINTS: Record<string, string> = {
   "pw-cs": "#31251e",
   "uw-cs": "#242b31",
@@ -31,3 +35,5 @@ export const TINTS: Record<string, string> = {
   "bme-cs": "#2e2924",
   "rug-psych": "#282a2d",
 };
+
+export const CAMPUS_FALLBACK = "bme";

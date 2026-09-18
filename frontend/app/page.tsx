@@ -6,7 +6,9 @@ import { buttonStyles } from "@/components/ui/button";
 import { CampusField } from "@/components/landing/campus-field";
 import { FeatureShowcase } from "@/components/landing/feature-showcase";
 import { HeroMemory } from "@/components/landing/hero-memory";
+import { UniversityCard } from "@/components/universities/university-card";
 import { IconArrowRight } from "@/components/icons";
+import { groupUniversities } from "@/lib/university";
 
 export const metadata: Metadata = {
   title: "AXIOM — AI, который узнаёт тебя и строит поступление вокруг тебя",
@@ -19,6 +21,7 @@ export default async function LandingPage({
 }) {
   const params = await searchParams;
   const instant = "instant" in params;
+  const universities = groupUniversities();
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -38,6 +41,12 @@ export default async function LandingPage({
             >
               Память
             </a>
+            <Link
+              href="/universities"
+              className="text-[11px] uppercase tracking-[0.16em] text-mist-500 transition-colors hover:text-mist-100"
+            >
+              Вузы
+            </Link>
           </nav>
           <Link href="/interview" className={buttonStyles("primary", "sm")}>
             Начать
@@ -100,6 +109,53 @@ export default async function LandingPage({
 
             <div className="mt-10 sm:mt-12">
               <FeatureShowcase />
+            </div>
+          </div>
+        </section>
+
+        <section id="universities" className="border-t border-line-soft">
+          <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div className="max-w-2xl">
+                <p className="eyebrow">Каталог</p>
+                <h2 className="mt-4 font-display text-[28px] leading-tight text-mist-50 sm:text-[34px]">
+                  Вузы, о которых знает AXIOM
+                </h2>
+                <p className="mt-3 max-w-xl text-sm leading-[1.8] text-mist-400">
+                  Кампус, программы, стоимость, стипендии и дедлайны — у каждого вуза своя страница. Открой любую и
+                  посмотри, что она даёт тебе.
+                </p>
+              </div>
+              <Link
+                href="/universities"
+                className="inline-flex items-center gap-1.5 text-[12px] text-violet-300 transition-colors hover:text-violet-100"
+              >
+                Все вузы
+                <IconArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+
+            <div className="mt-8 grid gap-5 sm:grid-cols-2">
+              {universities.slice(0, 4).map((group, index) => (
+                <UniversityCard key={group.slug} group={group} priority={index < 2} />
+              ))}
+              <Link
+                href="/universities"
+                className="group flex min-h-[180px] flex-col justify-between rounded-[26px] border border-line-soft bg-white/[0.02] p-6 transition-colors hover:border-violet-400/35 sm:col-span-2 sm:min-h-0 sm:flex-row sm:items-center"
+              >
+                <div>
+                  <p className="font-display text-[22px] leading-tight tracking-[-.03em] text-mist-50">
+                    Все {universities.length} вузов
+                  </p>
+                  <p className="mt-1.5 text-[13px] text-mist-400">
+                    Отдельная страница-каталог: фильтр по странам и карточка каждого вуза.
+                  </p>
+                </div>
+                <span className="mt-4 inline-flex items-center gap-1.5 text-[12px] text-violet-300 transition-colors group-hover:text-violet-100 sm:mt-0">
+                  Открыть каталог
+                  <IconArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
+                </span>
+              </Link>
             </div>
           </div>
         </section>

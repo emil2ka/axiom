@@ -85,6 +85,16 @@ export const useAxiomStore = create<AxiomState>()(
             // Разбор общий с речью: иначе «10к» превращалось в бюджет $10.
             const parsed = reparseFactValue(item.field, raw);
             if (!parsed) return item;
+            if (parsed.value === item.value && parsed.display === item.display) return item;
+            // Память помнит, каким факт был раньше: история видна в диагностике.
+            const revision = {
+              value: item.value,
+              display: item.display,
+              numeric: item.numeric,
+              source: item.source,
+              at: item.createdAt,
+            };
+            const history = [revision, ...(item.history ?? [])].slice(0, 12);
             return {
               ...item,
               value: parsed.value,
@@ -92,6 +102,7 @@ export const useAxiomStore = create<AxiomState>()(
               numeric: parsed.numeric,
               source: "manual",
               createdAt: Date.now(),
+              history,
             };
           }),
         })),

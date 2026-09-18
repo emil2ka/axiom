@@ -60,11 +60,11 @@ async function main(): Promise<void> {
     const health = await get("/health");
     check("GET /health → 200", health.status === 200, String(health.status));
     check("health сообщает режим движка", health.body?.engine === "rules" || health.body?.engine === "llm+rules", health.body?.engine);
-    check("health сообщает размер базы", health.body?.programs >= 40, String(health.body?.programs));
+    check("health сообщает размер базы", health.body?.programs >= 14, String(health.body?.programs));
 
     const programs = await get("/programs");
     check("GET /programs → 200", programs.status === 200);
-    check("программы приходят целиком", Array.isArray(programs.body?.programs) && programs.body.programs.length >= 40, String(programs.body?.programs?.length));
+    check("программы приходят целиком", Array.isArray(programs.body?.programs) && programs.body.programs.length >= 14, String(programs.body?.programs?.length));
     check("у программы есть порог балла и источник", programs.body.programs.every((p: any) => "gpaMinPercent" in p && p.sources?.length > 0));
 
     console.log("\n[2] Сквозной путь пользователя");

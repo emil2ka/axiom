@@ -60,7 +60,10 @@ export function diagnose(memories: MemoryFact[], programs: Program[] = PROGRAMS)
 
   if (budget) {
     const fits = pool.filter((program) => program.scholarship === "full" || totalPerYear(program) <= budget);
-    record(fits.length, `Бюджет ${formatUsd(budget)}/год покрывает ${fits.length} из ${pool.length} программ ${where}`);
+    record(
+      fits.length,
+      `Бюджет ${formatUsd(budget)}/год покрывает ${fits.length} из ${pool.length} ${pluralRu(pool.length, "программы", "программ", "программ")} ${where}`,
+    );
     const over = pool.length - fits.length;
     if (over > 0) {
       constraints.push(
@@ -73,7 +76,10 @@ export function diagnose(memories: MemoryFact[], programs: Program[] = PROGRAMS)
 
   if (ielts !== null) {
     const ok = pool.filter((program) => program.ieltsMin === null || program.ieltsMin <= ielts);
-    record(ok.length, `IELTS ${ielts.toFixed(1)} открывает ${ok.length} из ${pool.length} программ ${where}`);
+    record(
+      ok.length,
+      `IELTS ${ielts.toFixed(1)} открывает ${ok.length} из ${pool.length} ${pluralRu(pool.length, "программы", "программ", "программ")} ${where}`,
+    );
     const missing = pool.length - ok.length;
     if (missing > 0) {
       constraints.push(`${missing} ${pluralRu(missing, "программа требует", "программы требуют", "программ требуют")} IELTS выше ${ielts.toFixed(1)}`);
@@ -88,8 +94,8 @@ export function diagnose(memories: MemoryFact[], programs: Program[] = PROGRAMS)
     record(
       open.length,
       gpaPercent >= 85
-        ? `Средний балл ${gpa} (${gpaPercent}% от максимума) — сильная база для merit-стипендий, проходит порог ${open.length} из ${pool.length} программ ${where}`
-        : `Средний балл ${gpa} (${gpaPercent}%) проходит порог ${open.length} из ${pool.length} программ ${where}`,
+        ? `Средний балл ${gpa} (${gpaPercent}% от максимума) — сильная база для merit-стипендий, проходит порог ${open.length} из ${pool.length} ${pluralRu(pool.length, "программы", "программ", "программ")} ${where}`
+        : `Средний балл ${gpa} (${gpaPercent}%) проходит порог ${open.length} из ${pool.length} ${pluralRu(pool.length, "программы", "программ", "программ")} ${where}`,
     );
     const closed = pool.length - open.length;
     if (closed > 0) {
@@ -148,11 +154,11 @@ export function diagnose(memories: MemoryFact[], programs: Program[] = PROGRAMS)
   }
   if (stated.englishOnly) {
     const english = programs.filter((program) => program.language === "Английский");
-    strengths.push(`Только англоязычные программы: подходит ${english.length} из ${programs.length}`);
+    strengths.push(`Только англоязычные программы: подходит ${english.length} из ${programs.length} ${pluralRu(programs.length, "программы", "программ", "программ")}`);
   }
   if (stated.needsScholarship) {
     const funded = programs.filter((program) => program.scholarship !== "none");
-    strengths.push(`Со стипендией: ${funded.length} из ${programs.length} программ дают частичное или полное покрытие`);
+    strengths.push(`Со стипендией: ${funded.length} из ${programs.length} ${pluralRu(programs.length, "программы", "программ", "программ")} дают частичное или полное покрытие`);
   }
 
   if (priority) {

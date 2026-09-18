@@ -144,7 +144,9 @@ export function useContinuousVoice({
         const threshold = Math.max(0.013, noiseRef.current * 2.1);
         const speaking = rms > threshold;
 
-        if (levelRef) {
+        // Пауза — не время писать уровень: его ведёт озвучка AXIOM, иначе
+        // микрофонный шум подменял бы её отклик.
+        if (levelRef && !pausedRef.current) {
           const target = Math.min(1, rms / 0.11);
           levelRef.current = levelRef.current * 0.72 + target * 0.28;
         }

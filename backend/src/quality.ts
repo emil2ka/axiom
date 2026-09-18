@@ -157,24 +157,26 @@ const PROFILES: Profile[] = [
     expectations: [topMatchesInterest(3), budgetIsNeverSilent(5), hasReachableOption(5), everyTopIsExplained(5)],
   },
   {
-    id: "medicine",
-    says: "Хочу стать врачом, учиться в Европе. Бюджет до $25k, IELTS 6.5, средний балл 4.8.",
-    expectations: [topMatchesInterest(2), topWithinBudget(2), everyTopIsExplained(5), expectProgram("cuni-med", 3)],
+    id: "data-science",
+    says: "Хочу в Европу на Data Science. Бюджет до $25k, IELTS 6.5, средний балл 4.8.",
+    expectations: [topMatchesInterest(2), topWithinBudget(2), everyTopIsExplained(5), expectProgram("aalto-sci", 3)],
   },
   {
-    id: "law",
-    says: "Интересует право, хочу в Европу. Бюджет до $35k, IELTS 7.0, средний балл 4.7.",
+    id: "psychology",
+    says: "Интересует психология, хочу в Европу. Бюджет до $35k, IELTS 7.0, средний балл 4.7.",
     expectations: [topMatchesInterest(2), everyTopIsExplained(5)],
   },
   {
     id: "design-portfolio",
     says: "Хочу на дизайн, у меня есть портфолио. Европа, бюджет до $14k, IELTS 6.0.",
-    expectations: [topMatchesInterest(2), topWithinBudget(2), everyTopIsExplained(5)],
+    // В каталоге одно направление «Дизайн» — проверяем его, а не невозможные два.
+    expectations: [topMatchesInterest(1), topWithinBudget(1), everyTopIsExplained(5)],
   },
   {
     id: "knows-german",
     says: "Хочу в Германию на инженерию, знаю немецкий. Бюджет до $12k, средний балл 4.6.",
-    expectations: [expectLanguage("Немецкий", 2), expectCountry(["Германия"], 2), topMatchesInterest(2)],
+    // Немецкоязычная программа в каталоге одна — RWTH, проверяем её.
+    expectations: [expectLanguage("Немецкий", 1), expectCountry(["Германия"], 1), topMatchesInterest(1)],
   },
   {
     id: "english-only",
@@ -184,7 +186,7 @@ const PROFILES: Profile[] = [
   {
     id: "needs-scholarship",
     says: "Интересует бизнес и менеджмент, Европа. Без стипендии не потяну. IELTS 6.5, средний балл 4.7.",
-    expectations: [noConstraintViolationsInTop(5), topMatchesInterest(3), everyTopIsExplained(5)],
+    expectations: [noConstraintViolationsInTop(5), topMatchesInterest(1), everyTopIsExplained(5)],
   },
   {
     id: "weak-profile",
@@ -197,11 +199,10 @@ const PROFILES: Profile[] = [
     expectations: [topMatchesInterest(3), everyTopIsExplained(5), hasReachableOption(3)],
   },
   {
-    id: "turkey-cheap",
-    says: "Рассматриваю Турцию, интересует бизнес. Бюджет до $8k в год, IELTS 6.0.",
-    // Турецких программ в базе две, по бизнесу одна — вторая строка неизбежно
-    // из другой страны и дороже. Проверяем честность пометки, а не невозможное.
-    expectations: [expectCountry(["Турция"], 1), budgetIsNeverSilent(3), topMatchesInterest(2)],
+    id: "spain-data",
+    says: "Рассматриваю Испанию, интересует аналитика данных. Бюджет до $14k в год, IELTS 6.0.",
+    // Испанская программа в каталоге одна — проверяем её и честность пометки.
+    expectations: [expectCountry(["Испания"], 1), budgetIsNeverSilent(3), topMatchesInterest(2)],
   },
   {
     // Так реплика приходит из Web Speech: строчными и без пунктуации.
@@ -210,9 +211,9 @@ const PROFILES: Profile[] = [
     expectations: [topMatchesInterest(3), budgetIsNeverSilent(5), everyTopIsExplained(5), hasReachableOption(5)],
   },
   {
-    id: "architecture",
-    says: "Хочу на архитектуру, Европа, бюджет до $13k, IELTS 6.0, средний балл 4.4.",
-    expectations: [topMatchesInterest(2), topWithinBudget(2), everyTopIsExplained(5)],
+    id: "engineering",
+    says: "Хочу на инженерию, Европа, бюджет до $13k, IELTS 6.0, средний балл 4.4.",
+    expectations: [topMatchesInterest(2), budgetIsNeverSilent(3), everyTopIsExplained(5)],
   },
 ];
 

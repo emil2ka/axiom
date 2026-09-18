@@ -113,6 +113,14 @@ export function IconChevronLeft(p: IconProps) {
   );
 }
 
+export function IconChevronDown(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="m6 9.5 6 6 6-6" />
+    </Svg>
+  );
+}
+
 export function IconStar({ filled, className }: IconProps & { filled?: boolean }) {
   return (
     <svg
@@ -285,6 +293,14 @@ export function IconPlus(p: IconProps) {
   return (
     <Svg {...p}>
       <path d="M12 5.5v13M5.5 12h13" />
+    </Svg>
+  );
+}
+
+export function IconMinus(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M5.5 12h13" />
     </Svg>
   );
 }

@@ -1,81 +1,52 @@
 "use client";
 
+import { Fragment } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Logo } from "@/components/logo";
-import { Badge } from "@/components/ui/badge";
-import { IconCircleCheck, IconRefresh } from "@/components/icons";
-import { ProgressBar } from "@/components/ui/progress";
+import { IconRefresh } from "@/components/icons";
 import { FLOW_STEPS, findStepIndex } from "@/lib/flow";
 import { DemoSeed } from "@/components/shell/demo-seed";
 import { useHydrated } from "@/lib/hooks";
 import { useAxiomStore } from "@/lib/store";
-import { pluralRu } from "@/lib/shared/engine";
 import { cn } from "@/lib/utils";
 
-function stepState(index: number, currentIndex: number): "done" | "current" | "upcoming" {
-  if (currentIndex === -1) return "upcoming";
-  if (index < currentIndex) return "done";
-  if (index === currentIndex) return "current";
-  return "upcoming";
-}
+const BALL = "radial-gradient(120% 120% at 32% 26%, #d7ebff 0%, #7cb6f2 45%, #3a76c8 100%)";
 
-function Stepper({ currentIndex }: { currentIndex: number }) {
-  return (
-    <nav aria-label="Этапы маршрута">
-      <ol className="flex items-center">
-        {FLOW_STEPS.map((step, index) => {
-          const state = stepState(index, currentIndex);
-          return (
-            <li key={step.id} className="flex items-center">
-              {index > 0 ? <span aria-hidden="true" className="mx-1 h-px w-3 bg-line xl:w-5" /> : null}
-              <Link
-                href={step.href}
-                aria-current={state === "current" ? "step" : undefined}
-                className={cn(
-                  "flex items-center gap-2 rounded-full px-2.5 py-1.5 text-[12.5px] font-medium transition-colors",
-                  state === "current" && "bg-white/[0.08] text-mist-50",
-                  state === "done" && "text-mist-300 hover:text-mist-100",
-                  state === "upcoming" && "text-mist-500 hover:text-mist-300",
-                )}
-              >
-                {state === "done" ? (
-                  <IconCircleCheck className="h-4.5 w-4.5 text-teal-400" />
-                ) : (
-                  <span
-                    className={cn(
-                      "flex h-4.5 w-4.5 items-center justify-center rounded-full border text-[10.5px] tabular-nums",
-                      state === "current"
-                        ? "border-transparent bg-violet-500 text-ink-950"
-                        : "border-line text-mist-500",
-                    )}
-                  >
-                    {index + 1}
-                  </span>
-                )}
-                <span className="hidden whitespace-nowrap xl:inline">{step.short}</span>
-              </Link>
-            </li>
-          );
-        })}
-      </ol>
-    </nav>
-  );
-}
-
-function StepperMobile({ currentIndex }: { currentIndex: number }) {
+/** Шаги — полосой во всю ширину сайта, всегда на виду: шарик на текущем. */
+function StepNav({ currentIndex }: { currentIndex: number }) {
   const safeIndex = currentIndex === -1 ? 0 : currentIndex;
-  const step = FLOW_STEPS[safeIndex];
+
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between text-[12px]">
-        <span className="font-medium text-mist-200">
-          Шаг {safeIndex + 1} из {FLOW_STEPS.length} · {step.label}
-        </span>
-        <span className="text-mist-500">{Math.round(((safeIndex + 1) / FLOW_STEPS.length) * 100)}%</span>
-      </div>
-      <ProgressBar value={((safeIndex + 1) / FLOW_STEPS.length) * 100} size="sm" />
-    </div>
+    <nav
+      aria-label="Этапы маршрута"
+      className="no-scrollbar flex w-full items-center overflow-x-auto border-t border-line-soft/70 px-4 py-3 sm:overflow-visible sm:px-6"
+    >
+      {FLOW_STEPS.map((step, index) => {
+        const done = index < safeIndex;
+        const current = index === safeIndex;
+        return (
+          <Fragment key={step.id}>
+            {index > 0 ? <span aria-hidden="true" className="mx-2 h-px w-4 shrink-0 bg-white/[0.08] sm:mx-4 sm:w-auto sm:flex-1" /> : null}
+            <Link
+              href={step.href}
+              aria-current={current ? "step" : undefined}
+              className={cn(
+                "flex shrink-0 items-center gap-1.5 whitespace-nowrap text-[12px] transition-colors sm:text-[12.5px]",
+                current ? "text-mist-50" : done ? "text-mist-400 hover:text-mist-100" : "text-mist-500 hover:text-mist-200",
+              )}
+            >
+              {current ? (
+                <span className="block h-2 w-2 rounded-full" style={{ background: BALL, boxShadow: "0 0 12px rgba(124,182,242,0.45)" }} />
+              ) : (
+                <span className={cn("tnum text-[11px]", done ? "text-mist-500" : "text-mist-600")}>{index + 1}</span>
+              )}
+              {step.short}
+            </Link>
+          </Fragment>
+        );
+      })}
+    </nav>
   );
 }
 
@@ -90,19 +61,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col">
       <DemoSeed />
-      <header className="sticky top-0 z-40 border-b border-line-soft bg-ink-950/80 backdrop-blur-xl">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+      <header className="sticky top-0 z-40 border-b border-line-soft bg-ink-950/85 backdrop-blur-xl">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6">
           <Link href="/" aria-label="AXIOM — на главную" className="shrink-0">
             <Logo />
           </Link>
-          <div className="hidden flex-1 justify-center lg:flex">
-            <Stepper currentIndex={currentIndex} />
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-5">
             {hydrated && memoriesCount > 0 ? (
-              <Badge tone={demoMode ? "teal" : "violet"} dot className="hidden sm:inline-flex">
-                {demoMode ? "Демо" : "Память"}: {memoriesCount} {pluralRu(memoriesCount, "факт", "факта", "фактов")}
-              </Badge>
+              <Link href="/diagnosis" className="text-[12px] text-mist-400 transition-colors hover:text-mist-100">
+                {demoMode ? "Демо" : "Память"} <span className="tnum text-mist-200">{memoriesCount}</span>
+              </Link>
             ) : null}
             {hydrated && memoriesCount > 0 ? (
               <button
@@ -110,23 +78,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 onClick={() => resetAll()}
                 title="Начать заново"
                 aria-label="Начать заново"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-mist-500 transition-colors hover:bg-white/[0.06] hover:text-mist-200"
+                className="text-mist-500 transition-colors hover:text-mist-200"
               >
                 <IconRefresh className="h-4 w-4" />
               </button>
             ) : null}
           </div>
         </div>
-        <div className="px-4 pb-3 sm:px-6 lg:hidden">
-          <StepperMobile currentIndex={currentIndex} />
-        </div>
+        <StepNav currentIndex={currentIndex} />
       </header>
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">{children}</main>
-      <footer className="mt-8 border-t border-line-soft">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-8 pt-6 sm:px-6 sm:pb-10 sm:pt-8">{children}</main>
+      <footer>
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-4 py-6 text-[11.5px] leading-relaxed text-mist-500 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <p className="max-w-xl">
             Данные о программах — демонстрационные, проверяй условия и дедлайны на официальных сайтах вузов. Оценка
-            соответствия — не гарантия поступления. Изображения кампусов используются как визуальные ориентиры.
+            соответствия — совпадение с фактами профиля, а не гарантия поступления. Изображения кампусов используются как
+            визуальные ориентиры.
           </p>
           <p className="shrink-0">
             <a
